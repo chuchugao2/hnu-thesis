@@ -494,3 +494,161 @@ FindDenseMatches-Both{(}$G_t, Q, \Phi, g^{i+1}, A, k${)} \\
 \end{algorithm}
 
 \section{图压缩技术}
+\label{mwstar:compact-graph}
+
+在本节中，我们将针对每个$G_t$的CSM-TopK搜索转化为在压缩图$\cG_t$和新查询$\cQ$上的更高效的搜索。
+$\cQ$与$Q$拥有相同的顶点集和边集，唯一的不同在于新的标签函数$\cL_{\cQ}$（当上下文明确时简写为$\cL$），其中$\cQ$中的每个查询顶点都具有新的唯一标签。
+在不失一般性的情况下，我们假设$\cL(u_j) = l_j^{new}$。
+因此，$\cQ = {V_Q, E_Q, \cL}$。
+
+$\cG_0$是基于$G_0$构建的，而对于$t>0$，$\cG_t$是通过一系列基于$o_t$的调整从$\cG_{t-1}$转换而来。
+我们在$\cG_t$上进行的$\cQ$搜索可以更加高效地返回正确的$A_{G_t, Q}^k$，且所需的空间开销、搜索时间以及维护开销都大大降低。
+
+\subsection{压缩图构建}
+\label{s-sec:compact-graph-construction}
+
+接下来我们讨论在$G_t$和$Q$上的压缩图$\cG_t$。
+
+我们用$\tau$表示$\cG_t$中的一个数据顶点，用$\cg$表示$\cG_t$中的一个子图。
+每个$\tau \in V_{\cG_t}$对应着$V_{G_t}$中的一个数据顶点和$V_Q$中的一个查询顶点之间的匹配关系。
+我们使用$\langle v_i, u_j \rangle$来表示一个匹配关系，其中$v_i$匹配$u_j$。
+如果$v_i$通过了$u_j$的邻域标签频率过滤（NLF）~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}，我们说$v_i$是$u_j$的NLF候选（NLF-candidate），即：
+$v_i$匹配$u_j$，并且对于任何标签$l$（在$L_Q$下，而不是$\cL_{\cQ}$），有$|N_{G_t}^l(v_i)| \geq |N_Q^l(u_j)|$。
+
+每个顶点$\tau \in V_{\cG_t}$恰好对应一个唯一的匹配关系$\langle v_i, u_j \rangle$，其中$v_i$是$u_j$的NLF候选。
+我们将$\cL(\tau)$设置为$u_j$在$\cQ$中的标签，即$l_j^{new}$。
+因此，我们可以按以下方式构建$V_{\cG_t}$：首先将$V_{\cG_t}$初始化为空集，并枚举$v_i$和$u_j$的所有匹配对。
+如果$v_i$是$u_j$的NLF候选，则在$V_{\cG_t}$中创建一个新的顶点$\tau_{i^\prime}$，标签为$\cL(\tau_{i^\prime}) = l_j^{new}$。
+
+$E_{\cG_t}$是基于$V_{\cG_t}$构建的。
+考虑两个顶点$\tau_1$和$\tau_2$，它们对应的匹配关系分别为$\langle v_{i_1}, u_{j_1} \rangle$和$\langle v_{i_2}, u_{j_2} \rangle$。
+当且仅当$(v_{i_1}, v_{i_2}) \in E_{G_t}$且$(u_{j_1}, u_{j_2}) \in E_Q$，则在$E_{\cG_t}$中存在一条边$(\tau_1, \tau_2)$。
+显然，$E_{\cG_t}$中的边$(\tau_1, \tau_2)$表示数据边$(v_{i_1}, v_{i_2})$与查询边$(u_{j_1}, u_{j_2})$之间的匹配关系。
+同时，将边$(\tau_1, \tau_2)$的权重设置为边$(v_1, v_2)$的权重，即$W_{v_1, v_2}$。
+
+图\ref{fig:compact}中展示了图\ref{fig:csm-topk}a中的运行示例对应的压缩图$\cG_t$和新查询$\cQ$。
+我们可以看到，$\tau_1$对应着$\langle v_1, u_1 \rangle$，因为$v_1$是$u_1$的NLF候选。
+同时，$V_{\cG_t}$中没有与$v_{10}$或$v_{11}$相关的顶点，因为它们都不是任何查询顶点的NLF候选。
+
+\begin{figure}[h!]
+\def\wscorevone{0.62}
+\centering
+\begin{subfigure}[t]{\wscorevone\linewidth}
+\centering
+\resizebox{\linewidth}{!}
+{
+\includegraphics{\csmfolder data_compact_graph.pdf}
+}
+\caption{压缩图$\cG_t$}
+\label{fig:data_compact_graph}
+\end{subfigure}
+\begin{subfigure}[t]{0.35\linewidth}
+\centering
+\resizebox{\linewidth}{!}
+{
+\includegraphics{\csmfolder query_compact_graph.pdf}
+}
+\caption{新查询图$\cQ$}
+\label{fig:query_compact_graph}
+\end{subfigure}
+\caption{压缩图和新查询示例}
+\label{fig:compact}
+\end{figure}
+
+
+\subsection{压缩图计算}
+接下来我们讨论如何基于我们在$\cG_t$上的CSM-TopK搜索来计算目标密集答案$A_{G_t, Q}^k$。
+
+我们假设$\cG_t$上的MWstar已经构建完成。
+对于一个子图$\cg = \{\tau_1, \tau_2, \dots, \tau_{|V_{\cQ}|}\}$，我们假设$\tau_x$对应匹配关系$\langle v_{i_x}, u_{j_x} \rangle$（$1 \leq x \leq |V_{\cQ}|$）。
+我们可以很容易地理解，如果$g = \{v_{i_1}, v_{i_2}, \dots, v_{i_{|V_Q|}}\}$是$Q$在$G_t$上的匹配，而$\Phi = \{u_{j_1}, u_{j_2}, \dots, u_{j_{|V_Q|}}\}$是$Q$的查询顶点，那么$\cg$一定是$\cQ$在$\cG_t$上的匹配。
+然而，反过来并不成立，也就是说，当$\cg$是$\cQ$在$\cG_t$上的匹配时，对应的$g$可能不是$Q$的匹配。
+具体来说，对于子图$V_{\cg}$中的两个不同的顶点$\tau_x$和$\tau_y$，它们对应的数据顶点$v_{i_x}$和$v_{i_y}$可能是相同的（即$v_{i_x} = v_{i_y}$），这会将同构映射$f(u_{j_{x^\prime}}) = v_{i_{x^\prime}}$（$1 \leq x^\prime \leq |V_Q|$）, 从同构降级为同态~\cite{homomorphism-DBLP:conf/soda/CyganFGKMPS16}。
+
+因此，我们需要一种有效的策略来保证搜索仅返回其对应的$g$与$Q$在$G_t$中完全同构的$\cg$。
+实际上，我们可以通过扩展$V_{\cG_t}$中数据顶点的访问状态到对应的$V_{G_t}$中的数据顶点来轻松实现这一点。
+具体来说，对于$V_{G_t}$中的每个数据顶点$v_{i_x}$，我们可以在$V_{\cG_t}$中维护一个顶点计数，该计数表示在$V_{\cG_t}$,$v_{i_x}$与某些查询顶点之间的匹配关系。
+我们称这个计数为$v_{i_x}$的\emph{访问计数}。
+这样，对于每个顶点$\tau_x$，如果它对应的匹配关系是$\langle v_{i_x}, u_{j_x} \rangle$，当我们需要标记$\tau_x$为已访问时，我们会同时增加$v_{i_x}$的访问计数；
+而当我们将$\tau_x$重置为未访问时，我们减少$v_{i_x}$的访问计数。
+当我们对候选集进行访问检查时（例如公式 \ref{equation:wcoj-intersection} 和 \ref{equation:local-candidate-set}），我们会过滤掉那些访问计数大于 0 的 $\tau_x$。
+显然，访问扩展是非常简单的，并且对搜索的额外时间消耗可以忽略不计。
+\begin{theorem} \label{theorem:reduce-correctness}
+如果 $A_{\cG_t, \cQ}^k$ 包含通过我们的CSM-TopK搜索（算法 \ref{alg:localmwstar:framework}）在 $\cG_t$ 和 $\cQ$ 上得到的前 $k$ 个答案，并且应用了访问扩展，
+那么对于 $A_{\cG_t, \cQ}^k$ 中的每个子图 $\cg=$ \{$\tau_1$, $\tau_2$, $\cdots$, $\tau_{|V_{\cQ}|}$\}，
+其中 $\tau_{x}$ 对应于匹配关系 $\langle v_{i_x}$, $u_{j_x}\rangle$（$1\leq x\leq |V_{\cQ}|$），
+$g=$ \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 必须是 $A_{G_t, Q}^k$ 中的一个匹配，且满足 $den(g) = den(\cg)$。
+\end{theorem}
+\begin{proof}
+设 $f$ 表示从 $V_{\cQ}$ 到 $V_{\cg}$ 的双向映射，即 $f(u_x) = \tau_x$ （$1\leq x\leq |V_Q|$）。
+我们可以构建一个从 $V_{\cg}$ 到集合 \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 的映射 $f^{\prime}$，其中 $f^{\prime}(\tau_x) = v_{i_x}$。
+由于我们在搜索 $\cg$ 时应用了访问扩展，对于 $1\leq x<y\leq |V_Q|$，$v_{i_x} \neq v_{i_y}$， $f^{\prime}$ 也是双射的。
+因此，设 $f^{new} = f \cdot f^\prime$，那么 $f^{new}$ 将是 $V_Q$ 和满足子图匹配约束的集合 \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 之间的双射。
+\end{proof}
+定理 \ref{theorem:reduce-correctness} 保证了我们在压缩图上的搜索的正确性。
+
+例如，图 \ref{fig:compact} 中的 $\cG_t$ 和 $\cQ$ 对应的 $A_{\cG_t, \cQ}^3$ 包含 $\cg_1=$\{$\tau_1$, $\tau_3$, $\tau_4$, $\tau_9$\}，$\cg_2=$\{$\tau_1$, $\tau_3$, $\tau_5$, $\tau_9$\} 和 $\cg_3=$\{$\tau_1$, $\tau_3$, $\tau_6$, $\tau_9$\}，我们可以看到对应的 $g_1$、$g_2$ 和 $g_3$ 正好构成图 \ref{fig:csm-topk} 中的 $A_{G_t, Q}^3$。
+
+\subsection{压缩图维护}
+接下来我们讨论如何根据每个更新 $o_t$（$t>0$）将 $\cG_{t-1}$ 调整为 $\cG_t$。
+对于压缩图上的 MWstars 维护，过程与我们之前的讨论完全相同。
+假设我们已经在 $\cG_{t-1}$ 上构建了全局和局部的 MWstars。
+考虑一个更新 $o_t=$ $(op, v_{i_1}, v_{i_2})$，其中 $v_{i_1}$ 和 $v_{i_2}$ 分别与 $u_{j_1}$ 和 $u_{j_2}$ 匹配。
+%
+我们首先集中讨论 $E_{\cG_{t-1}}$ 上的边插入/删除（由 $o_t$ 引起的）。这些边的更新将 $\cG_{t-1}$ 转换为 $\cG_t$。
+
+\subsubsection{插入}
+如果 $o_t$ 是一个插入操作，
+我们首先检查 $v_{i_1}$ （或 $v_{i_2}$）是否是$G_t$上$u_{j_1}$（或 $u_{j_2}$）的 NLF 候选，然后通过以下步骤对 $E_{\cG_{t-1}}$ 进行调整：
+\begin{itemize}
+\item \textcircled{1} 我们在$G_{t-1}$上应用$o_t$形成 $G_t$，然后初始化 $\cG_t = \cG_{t-1}$。
+\item \textcircled{2} 如果 $v_{i_1}$ 不是 $u_{j_1}$ 的 NLF 候选者，且 $v_{i_2}$ 也不是 $u_{j_2}$ 的 NLF 候选者，则$o_t$在$\cG_{t-1}$上不会有任何更新，我们可以直接终止当前更新。
+\item \textcircled{3} 如果 $v_{i_1}$（对称情况是 $v_{i_2}$）是 $u_{j_1}$ 的一个新的 NLF 候选者，
+即在 $V_{\cG_{t-1}}$ 中没有与 $\langle v_{i_1}, u_{j_1} \rangle$ 相对应的顶点，
+那么我们将在 $\cG_t$ 中为 $\langle v_{i_1}, u_{j_1} \rangle$创建一个标签为$i_1$的新顶点 $\tau_1$。
+新顶点 $\tau_1$ 的加入可能会导致新的边加入到 $\cG_t$。
+我们可以遍历 $v_{i_1}$ 在 $G_t$ 中的邻居，并为每个 $v_{i_3}\in N_{G_t}(v_{i_1})$，
+计算所有匹配对 $\langle v_{i_3}, u_{j_3} \rangle$，使得 $u_{j_3}$ 是 $u_{j_1}$ 的邻居，并且 $v_{i_3}$ 是 $u_{j_3}$ 的 NLF 候选者。
+这样，我们可以将每条边 $(\tau_1, \tau_3)$ 添加到 $\cG_t$，其中 $\tau_3$ 是对应于 $\langle v_{i_3}, u_{j_3} \rangle$ 的顶点。
+\item \textcircled{4} 如果 $v_{i_1}$ 和 $v_{i_2}$ 分别是 $u_{j_1}$ 和 $u_{j_2}$ 的 NLF 候选者，并且它们都不是新的，那么我们将把边 $(\tau_1, \tau_2)$ 添加到 $\cG_t$，其中 $\tau_1$ 和 $\tau_2$ 分别对应于 $\langle v_{i_1}, u_{j_1} \rangle$ 和 $\langle v_{i_2}, u_{j_2} \rangle$两个顶点。
+\end{itemize}
+
+很容易理解上述维护步骤的正确性。
+
+在将这些边插入到 $E_{\cG_t}$ 后，我们可以更新 $\cG_t$ 的 MWstars。
+
+由于更新 $o_t$ 可能会导致 $\cG_t$ 中的多条新边。
+具体地，设 $E_1$ 和 $E_2$ 分别表示与 $\tau_1$ 和 $\tau_2$ 相邻的两组新插入的边，
+其中 $\tau_1$（或 $\tau_2$）是 $V_{\cG_t}$ 中对应于 $\langle v_{i_1}, u_{j_1} \rangle$（或 $\langle v_{i_2}, u_{j_2} \rangle$）的顶点
+\footnote{如果 $\tau_1$（或 $\tau_2$）不存在，我们设定 $E_1$（或 $E_2$）为 $\emptyset$。}。
+
+一种直接的方法是从每个新插入的边开始在 $E_1 \cup E_2$ 中进行搜索。
+然而，正如定理 \ref{theorem:only-one-edge-to-search} 所指出的，这种朴素策略会导致大量冗余计算。
+
+\begin{theorem} \label{theorem:only-one-edge-to-search}
+    考虑更新 $o_t = (op, v_{i_1}, v_{i_2})$，其中 $v_{i_1}$ 和 $v_{i_2}$ 分别与 $u_{j_1}$ 和 $u_{j_2}$ 匹配。
+    对于每个新的匹配 $\cg \in A_{\cG_t, \cQ} \setminus A_{\cG_{t-1}, \cQ}$，$\cg$ 必须包含新插入的边 $(\tau_1, \tau_2)$，其中 $\tau_1$ 对应于匹配关系 $\langle v_{i_1}, u_{j_1} \rangle$，而 $\tau_2$ 对应于匹配关系 $\langle v_{i_2}, u_{j_2} \rangle$。
+\end{theorem}
+
+\begin{proof}
+    我们通过矛盾法来证明这一点。
+    假设 $\cg$ 是一个新匹配，其中 $(\tau_1, \tau_2) \notin E_{\cg}$。
+    为了不失一般性，我们假设 $\cg$ 是由新插入的边 $(\tau_1, \tau_3)$（其中 $\tau_3 \neq \tau_2$）引起的，其中 $\tau_3$ 对应于匹配关系 $\langle v_{i_3}, u_{i_3} \rangle$。
+    由于在应用 $o_t$ 之前，边 $(v_{i_1}, v_{i_3})$ 已经存在于 $E_{G_{t-1}}$ 中，且根据我们的更新规则，
+    $(\tau_1, \tau_3)$ 只有在 $\tau_1$ 是一个新创建的顶点时才会成为新插入的边。
+    然而，设 $g$ 是 $\cg$ 在 $G_t$ 中的对应匹配，那么 $v_{i_1}$ 必须在 $V_g$ 中而 $v_{i_2}$ 不在，这意味着即使没有 $v_{i_2}$，$v_{i_1}$ 仍然是 $u_{j_1}$ 的 NLF 候选者。
+    换句话说，$\tau_1$ 并不是一个新创建的顶点，这与假设矛盾。
+    因此，证明完成。
+\end{proof}
+
+因此，我们只需要从边 $(\tau_1, \tau_2) \in E_1 \cap E_2$ 开始进行搜索，并且可以剪枝从$(E_1 \cup E_2) \setminus (E_1 \cap E_2)$中新插入的边开始的搜索。
+
+\subsubsection{删除操作}
+如果 $o_t$ 是一个删除操作，我们按以下步骤进行维护：
+\begin{itemize}
+\item \textcircled{1} 我们在 $G_{t-1}$ 上应用 $o_t$，形成 $G_t$，然后初始化 $\cG_t = \cG_{t-1}$；
+\item \textcircled{2} 如果在 $\cG_{t-1}$ 中，$v_{i_1}$ 既不是 $u_{j_1}$ 的 NLF 候选者，$v_{i_2}$ 也不是 $u_{j_2}$ 的 NLF 候选者，那么我们无需做任何操作，因为 $\cG_{t-1}$ 上不会发生更新；
+\item \textcircled{3} 如果某个顶点 $\tau$ 在删除边 $(v_{i_1}, v_{i_2})$ 后失效，我们需要从 $\cG_t$ 中删除 $\tau$，并移除与 $\tau$ 相邻的边。
+\end{itemize}
+
+对于每个删除的边，我们将相应地更新 MWstars。根据第 \ref{ch3:base-framework} 节中的框架，如果之前排名前 $k$ 的答案已经过期，无论 $\cG_{t-1}$ 中删除了多少条边，我们只需要计算一次补充的答案。并且我们的重新计算是在压缩图 $\cG_t$ 上进行的，而不是在 $G_t$ 上。
