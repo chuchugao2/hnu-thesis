@@ -2,11 +2,25 @@
 %!TEX program = xelatex
 
 \documentclass[doctor]{hnuthesis}
-\usepackage{subfigure}
+% \usepackage{subfigure}
 \usepackage{amsmath}
 \usepackage{algorithmicx,algpseudocode}
 \usepackage{float}
 
+\usepackage{amsthm} % for proof
+\usepackage{setspace} % setstretch
+\usepackage{graphicx} % resizebox
+\usepackage{makecell} % for makecell 
+\usepackage{multirow} % for table
+\usepackage{multicol} % for table
+\usepackage{pifont}
+\usepackage{mathtools} % for \begin{multlined} also begin{align}
+	
+\usepackage{caption} % for subfigure error
+\usepackage{subcaption} % for subfigure error
+\usepackage{mathtools} % for ceil  & multilined
+\usepackage{amsfonts} % for mathbb
+\usepackage{balance} % for \balancea
 % 学校代码
 \hnucode{10532}
 % 学校名称
@@ -66,11 +80,13 @@ TopK Density Constraints}
         \listoftables
         \newpage
 \endgroup
-
+\input{newdef}
 % 正文章节
 \mainmatter
 \input{chapters/ch1}
 \input{chapters/ch2}
+\input{chapters/ch3}
+\input{chapters/ch4}
 \input{chapters/summary}
 \bibliography{references}
 

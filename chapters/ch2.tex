@@ -1,74 +1,132 @@
-\chapter{第二章}
+\chapter{相关知识}
 
-\section{第一节}
+\section{连续子图匹配（CSM）的定义与概念}
+\subsection{图的基本定义与概念}
+图是一种比较复杂的数据结构，它研究数据元素之间的多对多的关系。它是由节点和边构成的数据结构，用于
+表示任意两个元素之间的关系。图（Graph）是计算机科学中表示实体间关系的重要数据结构，定义为二元组
+$G=(V,E)$，其中V是节点的结合，E是边的集合,即：
+\begin{align*}
+  V &= \{\ v_1, v_2, \dots, v_n\ \},\\
+  E &\subseteq V \times V
+\end{align*}
 
-\subsection{第一小节}
+根据边的特性，图有多种的划分方式，根据边的方向性可分为有向图（图\ref{fig:example_noweight}）与无向图（图\ref{fig:example_weight}）。有向图中的边是有明确的方向的，每条边表示一种特定的方向，表示从起点指向终点的一条路径。如图\ref{fig:example_noweight}中所示$<v_1',v_2'>$,表示一条有向边，$v_1'$是起点，$v_2'$是终点。
+而无向图表示边是没有方向性的，即两个相连的顶点是可以互相抵达的，因此无向图又可以称之为特殊的有向图，因为每条边都代表着一个双向可达关系。如图\ref{fig:example_weight}中所示$<v_1,v_2>$,表示一条无向边，其可以认为是由$<v_1,v_2>$和$<v_2,v_1>$两条有向边组成。
+根据边上的权值，又可以分为有权图（图\ref{fig:example_weight}）和无权图（图\ref{fig:example_noweight}）。
+无权图中的边只表示两个顶点之间的可达关系，没有携带额外的信息；但有权图中，其边带有权重，并且这些权重具有不同的含义，例如距离、费用、强度等信息。
 
-\subsubsection{第一小小节}
-
-图~\ref{fig:demo}。
-
-\begin{figure}[H]
+\begin{figure}[h!]
+    \def\wscorevone{0.48}
     \centering
-    \includegraphics[width=0.3\linewidth]{figures/hnu-logo.png}
-    \caption{示例图表}
-    \label{fig:demo}
+        \begin{subfigure}[t]{\wscorevone\linewidth}
+            \centering
+            \resizebox{\linewidth}{!}
+            {
+                \includegraphics{\figs youxiangwuquan.pdf}
+            }
+            \caption{有向无权图}
+            \label{fig:example_noweight}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{\wscorevone\linewidth}
+            \centering
+            \resizebox{\linewidth}{!}
+            {
+                \includegraphics{\figs wuxiangyouquan.pdf}
+            }
+            \caption{无向有权图}
+            \label{fig:example_weight}
+        \end{subfigure}
+        \label{fig:definition}
+        \caption{图的常见分类}
+    \end{figure}
+
+图数据结构能够使用非常简洁的形式来表达复杂的数据。利用图这种数据结构，它能够很好的表达陈述句中的主谓宾，即以主语和宾语为对象，谓语作为两个对象之间的关联关系，这保证了它对于形式多样的复杂数据有非常强的表达能力。
+具体而言，生活中的各式各样的信息都能够通过主谓宾的形式分解并构建图模型，更重要的是，生活中大多数构建的图模型的边都具有权值，表示特定的含义。例如在金融支付应用中，“用户A向用户B转账100”这一信息中，用户A和用户B构成两个顶点，“转账”就是两个顶点之间的关联边，“100”就是这条关联边上的权值，代表的是这次转账的金额。
+综上所述，图模型在生活中的应用非常广泛，它能够清晰展示对象之间的关联关系，并且能够帮助数据分析人员更好的分析和挖掘数据。本文中主要以无向有权图作为分析对象，并且分析的算法同样适用于有向图。
+
+\subsection{子图匹配的概念与应用}
+子图匹配问题是图论中的经典问题之一。给定一个查询图和一个数据图，子图匹配的任务是找出数据图G中所有能够与查询图Q完全匹配的子图。具体而言，子图匹配涉及了以下的一些关键概念：
+\begin{figure}[h!]
+    \centering
+    \resizebox{0.8\linewidth}{!}{
+        \includegraphics{\figs e_subgraph_matching.pdf}
+    }
+    \caption{子图匹配示例}
+    \label{fig:example_subgraph_matching}
 \end{figure}
+\begin{itemize}
+    \item 子图匹配，也称为子图同构（Subgraph Isomorphism）：即给定一个查询图Q以及一个数据图G，Q子图同构于G中的一个子图g，当且仅当存在一个双射函数，对于Q中的每一个节点，在g中都能到找到与之对应的节点。
+    对于Q中的每一条边，在g中都能找到与其对应的边。
+    即查询图Q和子图g之间存在一个一一对应的节点和边的映射关系，换句话说就是查询图的结构能够完全嵌入到数据图中。
+    如图\ref{fig:example_subgraph_matching}a为查询图Q，图\ref{fig:example_subgraph_matching}b为数据图G。数据图中的子图$<v_1,v_2,v_3>$是查询图$<u_1,u_2,u_3>$的一个子图匹配结果，图中虚线表示他们的映射关系。
+    \item 子图匹配任务就需要在数据图中找到所有的子图集合，集合中的所有子图都能与查询图能够构成子图同构的关系。
+    \item 完全匹配（Full Match）:完全匹配其实就是一次完整的子图同构，查询图中的所有节点和边都在数据图的某个子图中找到一一对应的映射。
+    \item 部分匹配(Partial Match):部分匹配是指查询图中的一部分节点和边在数据图中找到了对应的关系，但不要求查询图的所有节点都能够找到映射。
+\end{itemize}
 
-三线表~\ref{table:demo}。
+子图匹配相关的经典算法主要分为两类，一类是基于深度一类为基于深度搜索加回溯的方式（Backtracking Search）\cite{sm-ullmann-DBLP:journals/jacm/Ullmann76}，一类为基于广度优先的Multi-way Join方法\cite{sm-bfs-DBLP:conf/focs/AtseriasGM08}。
 
-\begin{table}[H]
+基于深度搜索加回溯的方式: 给一个查询图Q，首先定义节点被匹配的顺序，如$<u_1,u_2,u_3>$，即按照$u_1$,$u_2$,$u_3$的顺序进行匹配，如果当前状态匹配不了，则回溯；如果要找全部的解集，也得做回溯。其优点是可避免产生大量的中间结果，因采用深度优先，仅有递归调用栈的空间，没有什么中间结果。其缺点是难以并行执行，会有大量的递归开销。
+
+基于广度优先的Multi-way Join方法：对于宽度优先的算法，实际关系数据库每次的Join就是宽度优先。其实就是不同候选解之间的Join操作，例如对于$<u_1,u_2,u_3>$的匹配顺序，每个节点在宽度优先搜索的时候都有对应的候选解，然后利用边的相邻关系做join操作，最终得到子图匹配的结果集合。
+可以看到，对于所有的节点都需要求候选集合做join操作，因此基于这种方式比较容易做并行操作。本文算法框架中的Worst Case Optiomal Join\cite{sm-bfs-DBLP:conf/focs/AtseriasGM08}就属于第二种方式。
+
+子图匹配问题在模式识别、社交网络分析、网络安全等方面都具有重要的应用价值。在生物信息学中，子图匹配用于识别分子结构中的相似模式；在社交网络中，子图匹配用于发现用户之间的潜在关系或者行为模式，在网络安全中，子图匹配用于检测恶意活动的特征或攻击模式。
+但是由于子图匹配的判定是NP完全的，列举所有的子图匹配出现的位置是NP难的。这意味着子图匹配的计算难度会随着图的规模的增加而迅速增加。特别是在大规模的图数据集上，子图匹配问题需要采用高效的算法来剪枝。
+
+\subsection{连续子图匹配的概念与应用}
+连续子图匹配（CSM，Continuous Subgraph Matching）是在子图匹配的基础上，研究如何在不断变化的动态图中，保持子图匹配的有效性和准确性。与静态子图匹配不同，连续子图匹配主要涉及以下特点：
+\begin{itemize}
+   \item 连续子图匹配：在动态图中，图的结构随着时间不断变化，节点和边可能会被增加、删除。因此，连续子图匹配需要考虑如何在这种变化中有效地维护子图匹配结果，避免每次变化都从头开始计算。
+   \item 增量更新：对于动态图，子图匹配不仅仅是对静态图进行一次匹配操作，而是需要根据图的增量更新，实时地更新匹配结果。增量更新的目标是尽量减少每次更新计算的代价。
+   \item 匹配结果的更新与维护：连续子图匹配的核心问题之一是如何有效地维护和更新匹配结果。随着边的添加或删除，部分匹配可能会失效，需要重新计算。而另一方面，有些匹配可能依然有效，可以通过增量更新来保存计算结果。
+\end{itemize}
+
+因为在现实生活中，大部分数据图都不是一尘不变的，因此连续子图匹配被广泛应用于如社交网络分析、交通网络、金融欺诈检测等领域。社交网络中的用户关系是动态变化的，对社交网络中的用户子图进行连续匹配，可以识别潜在的社交圈子、群体或行为模式；
+在交通网络中，路况和道路连接经常发生变化，实时监控交通状态并进行子图匹配，能够帮助分析交通流量、预测交通拥堵等；在金融网络中，交易关系和账户之间的连接不断变化，检测异常的金融行为或交易模式需要利用连续子图匹配技术。
+
+
+\section{密度约束下TopK子图连续子图匹配的概念}
+\begin{figure}[h!]
+    \def\wscorevone{0.49}
     \centering
-    \caption{示例表格}
-    \label{table:demo}
-    \begin{tabular}{ccc}
-        \toprule
-        A   & B     & C     \\
-        \midrule
-        foo & 你好  & 世界  \\
-        bar & Hello & World \\
-        \bottomrule
-    \end{tabular}
-\end{table}
+        \begin{subfigure}[t]{\wscorevone\linewidth}
+            \centering
+            \resizebox{\linewidth}{!}
+            {
+                \includegraphics{\figs e_attack_pattern.pdf}
+            }
+            \caption{子网攻击模式~\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}}
+            \label{fig:example_attack_pattern}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[t]{\wscorevone\linewidth}
+            \centering
+            \resizebox{\linewidth}{!}
+            {
+                \includegraphics{\figs e_traffic_jam.pdf}
+            }
+            \caption{交通拥堵模式~\cite{traffic-graph-matching-DBLP:journals/pvldb/SongGCW14}}
+            \label{fig:example_traffic_jam}
+        \end{subfigure}
+        \label{fig:definition}
+        \caption{CSM-TopK示例}
+    \end{figure}
+本文研究的主要问题是在连续子图匹配问题的基础上，利用TopK密度剪枝策略，旨在有效获取前K个具有最高密度的子图匹配结果。
+2014年，Manish Gupta等人首次提出了子图匹配中密度优先级的概念\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}。他们将子图的密度定义为其边权之和，即边权总和越大，子图的密度优先级越高。
+然而，该研究主要聚焦于静态图中的密度优先级，且提出的静态图索引无法有效应用于动态场景。
+至今，尚未有研究关注动态场景中TopK密度优先级机制对子图匹配结果的影响。
 
+因此，本文提出并研究一个新问题，即在动态场景下如何实时计算并获取前K个具有最高密度的子图匹配结果。
+这一问题在现实应用中具有广泛的应用前景。
+例如，在通信网络中，不同攻击模式可能具有不同的分析优先级，尽管它们可能具有相同的结构模式。
+图\ref{fig:example_attack_pattern}展示了通信网络中的攻击模式\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}，其中高数据传输速率的模式应当具有更高的响应优先级。快速识别这些高数据传输速率的模式有助于网络管理员及时找到受损最严重的子网络。
+同样，图\ref{fig:example_traffic_jam}展示了一种典型的交通拥堵模式\cite{traffic-graph-matching-DBLP:journals/pvldb/SongGCW14}，在道路网络中，交通流量较高的模式通常意味着拥堵程度较高，交管系统需要迅速采取应对措施。上述两种模式的实际应用场景均为动态变化的，因此，基于动态图中的密度约束进行TopK连续子图匹配，其应用价值远高于静态场景中的相同问题。
 
-\subsection{第二小节}
-
-\subsection{第三小节}
-
-\subsubsection{第一小小节}
-
-行内公式，$p = q * \frac{q}{p}$，$\begin{bmatrix} a & b & c \end{bmatrix}$。
-
-单行公式。
-
-\begin{equation}
-    e = \lim_{n\to \infty} \left(1 + \frac{1}{n}\right)^n
-\end{equation}
-
-多行公式~\ref{eq:foo}。
-
-\begin{equation}
-    \begin{aligned}
-        1+ 1*2 - (2-1) & = 1+ 2 - 1 \\
-                       & = 3-1      \\
-                       & = 2
-    \end{aligned}
-    \label{eq:foo}
-\end{equation}
-
-多行公式（无序号）。
-
-\begin{equation*}
-    \begin{aligned}
-        1+ 1*2 - (2-1) & = 1+ 2 - 1 \\
-                       & = 3-1      \\
-                       & = 2
-    \end{aligned}
-\end{equation*}
-
-\subsubsection{第二小小节}
-
-引用 ResNet~\cite{he2016deep}，中文引用~\cite{libaiThesis,chenjinbiao1980jixian}。
-
-
+\section{本章小结}
+本章介绍了图的基本概念、子图匹配和连续子图匹配（CSM）。
+首先，回顾了图的定义与分类，重点讨论了无向有权图，并介绍了图模型在实际应用中的广泛应用。
+接着，阐述了子图匹配的基本概念，并介绍了基于深度优先搜索、回溯以及广度优先的多向联接方法等经典算法。
+最后，本章探讨了连续子图匹配（CSM）的定义和基本概念，并介绍了其在社交网络、交通网络等领域的应用。
+基于这些基础，本章提出了一个新的研究问题——在动态场景下如何实时计算并获取前K个具有最高密度的子图匹配结果。

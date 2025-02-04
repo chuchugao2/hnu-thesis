@@ -1,0 +1,119 @@
+%% The following content must be adapted for the final version
+% paper-specific
+
+%\newcommand\vldbdoi{XX.XX/XXX.XX}
+%\newcommand\vldbpages{XXX-XXX}
+%% issue-specific
+%\newcommand\vldbvolume{15}
+%\newcommand\vldbissue{1}
+%\newcommand\vldbyear{2023}
+%% should be fine as it is
+%\newcommand\vldbauthors{\authors}
+%\newcommand\vldbtitle{\shorttitle} 
+%% leave empty if no availability url should be set
+%\newcommand\vldbavailabilityurl{https://github.com/zmli6/csm-plus-plus}
+%% whether page numbers should be shown or not, use 'plain' for review versions, 'empty' for camera ready
+%\newcommand\vldbpagestyle{plain} 
+% \newtheorem{definition}{\bf Definition}
+\newcommand{\csmfolder}{./exp/}
+\newcommand{\csmnewFig}{./exp/newFig/}
+\newcommand{\tablefolder}{./tab/}
+\newcommand{\picfolder}{./pics/}
+\newcommand{\figs}{./figures/}
+
+
+%\newcommand{\vldbblock}{
+%%%% do not modify the following VLDB block %%
+%%%% VLDB block start %%%
+%\pagestyle{\vldbpagestyle}
+%\begingroup\small\noindent\raggedright\textbf{PVLDB Reference Format:}\\
+%\vldbauthors. \vldbtitle. PVLDB, \vldbvolume(\vldbissue): \vldbpages, \vldbyear.\\
+%\href{https://doi.org/\vldbdoi}{doi:\vldbdoi}
+%\endgroup
+%\begingroup
+%\renewcommand\thefootnote{}\footnote{\noindent
+%This work is licensed under the Creative Commons BY-NC-ND 4.0 International License. Visit \url{https://creativecommons.org/licenses/by-nc-nd/4.0/} to view a copy of this license. For any use beyond those covered by this license, obtain permission by emailing \href{mailto:info@vldb.org}{info@vldb.org}. Copyright is held by the owner/author(s). Publication rights licensed to the VLDB Endowment. \\
+%\raggedright Proceedings of the VLDB Endowment, Vol. \vldbvolume, No. \vldbissue\ %
+%ISSN 2150-8097. \\
+%\href{https://doi.org/\vldbdoi}{doi:\vldbdoi} \\
+%}\addtocounter{footnote}{-1}\endgroup
+%%%% VLDB block end %%%
+%
+%%%% do not modify the following VLDB block %%
+%%%% VLDB block start %%%
+%\ifdefempty{\vldbavailabilityurl}{}{
+%\vspace{.3cm}
+%\begingroup\small\noindent\raggedright\textbf{PVLDB Artifact Availability:}\\
+%The source codes have been made available at \url{\vldbavailabilityurl}.
+%\endgroup
+%}
+%%%% VLDB block end %%%
+%}
+
+
+\newtheorem{observation}{\bf Observation}%by liyh
+%\newtheorem{theorem}{\bf Theorem}%by zhwg
+
+%\newtheorem{definition}{\bf Definition}%by zhwg
+%\newtheorem{problem statement}{\bf Problem Statement}%by zhwg
+%\newtheorem{condition}{Condition}%by zhwg
+%\newtheorem{assumption}{Assumption}%by zhwg
+%\newtheorem{corollary}{Corollary}%by zhwg
+%\newtheorem{theorem}{\bf Theorem}%by zhwg
+%\newtheorem{proposition}{Proposition}%by zhwg
+%\newtheorem{lemma}{\bf Lemma}%by zhwg
+%\newtheorem{example}{Example}%by zhwg
+%\newtheorem{notation}{Notation}%by zhwg
+%\newtheorem{remark}{Remark}%by zhwg
+
+\newcommand{\inull}[1]{} 
+\newcommand{\iline}{\noindent\rule[0.5ex]{\linewidth}{1pt}}
+\newcommand{\fullversion}[1]{}
+\newcommand{\submitversion}[1]{}
+\newcommand{\iceil}[1]{\left \lceil #1 \right \rceil }
+\newcommand{\ifloor}[1]{\left \lfloor #1 \right \rfloor }
+
+
+%for notation
+\newcommand{\ilg}[1]{ L_{G}{(#1)} }
+
+
+\newcommand{\iN}{\mathbb{N}}
+\newcommand{\iE}{\mathbb{E}}
+\newcommand{\iNE}{\mathbb{N}\mathbb{E}}
+\newcommand{\gdpair}{F(f(v_1), f(v_2))}
+
+\newcommand{\iG}{\mathbb{G}}
+\newcommand{\iQ}{\mathbb{Q}}
+\newcommand{\qe}{\epsilon}
+
+\newcommand{\cQ}{\mathcal{Q}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cW}{\mathcal{W}}
+
+\newcommand{\cg}{\varrho}
+
+%\newcommand{\uphii}{\Phi^{u_1,u_2}_{Q_{i}}}
+\newcommand{\uphi}{\Phi^{u_1,u_2}_{Q_{i}}}
+\newcommand{\vphi}{\phi^{v_1,v_2}}
+
+\newcommand{\expfolder}{./exp/}
+\newcommand{\timefolder}{./exp/time/}
+\newcommand{\spacefolder}{./exp/space/}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+\newcommand{\mred}[1]{\textcolor{red}{#1}}
+
+\newcommand{\mbold}[1]{\mathrm{\mathbf{#1}}}
+
+\newcommand{\mceil}[1]{\lceil #1 \rceil}
+
+\newcommand{\mfloor}[1]{\lfloor #1 \rfloor}
+
+\newcommand{\netest}{\overset{\text{\tiny NE}}{\mapsto}}
+
+\newcommand{\nepass}[2]{#1 \netest f^{hyb}(#2)}
+
+\newcommand{\mtext}[1]{{\operatorname{\mathit{#1}}}}
