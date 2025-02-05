@@ -1,0 +1,94 @@
+
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{pgfplots}
+%\usepackage{pgfmath}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+%minimum size=10pt, inner sep=0pt
+
+\begin{document}
+\newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
+\newcommand{\labelfont}{16pt}
+\begin{tikzpicture}
+\input{./tikz_HEAD}
+\begin{semilogyaxis}
+[
+   ymin = 0,
+  ymax=60000000,
+%   ymax=0.9,
+%   xmin = 0,
+%   xmax =110
+%    width = 7cm,
+%    height = 6cm,
+%    nodes near coords,
+    point meta=rawy,
+    ymajorgrids = true,% add gridslines in ylabel
+    grid style=dashed,
+    ylabel = {Time(us)},
+%    scaled x ticks = base 10:-3,
+    /pgf/number format/1000 sep={},
+    xlabel = {Deletion Ratio},
+    xtick={\drone, \drtwo, \drthr, \drfor, \drfiv},
+    xticklabel={\pgfmathprintnumber\tick\%},
+%    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
+%    legend pos= north east,
+    legend cell align=left,
+    x label style = {font=\ptfont{\labelfont}},
+    ticklabel style = {font=\Large},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
+    extra y ticks={60000000},
+    extra y tick label={INF},
+%    extra y ticks={7200000000},
+%    extra y tick label={INF}
+    % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
+]
+
+\addplot [ourMark]
+coordinates {(\drone, 8.61  ) (\drtwo, 8.52  )  (\drthr, 8.87  )  (\drfor, 14.56  )  (\drfiv, 18.01  )};
+
+\addplot [graphflowMark]
+coordinates {(\drone, 2643.72 ) (\drtwo, 3136.85 )  (\drthr, 3483.18 )  (\drfor, 3381.16 )  (\drfiv, 2852.52 )};
+
+\addplot [rapidflowMark]
+coordinates {(\drone, 7203.35 ) (\drtwo, 7029.95 )  (\drthr,6668.89 )  (\drfor, 5832.63 )  (\drfiv, 6802.54 )};
+
+\addplot [caligMark]
+coordinates {(\drone, 11370.37) (\drtwo, 11415.05)  (\drthr, 12627.52)  (\drfor, 11434.52)  (\drfiv, 12917.51)};
+
+\addplot [instopkMark]
+coordinates {(\drone, 60000000) (\drtwo, 60000000)  (\drthr, 60000000)  (\drfor, 60000000)  (\drfiv, 60000000)};
+\addplot [pbsmMark]
+coordinates{(\drone, 54016.46 ) (\drtwo, 31898.70 )  (\drthr,20715.27 )  (\drfor, 116566.38 )  (\drfiv, 14734.05 )};
+
+
+\end{semilogyaxis}
+
+% 31238.77117	29799.44212	32041.23502	19532.96765	18696.43799	17069.86616
+%\addplot [vf2Mark]
+%coordinates {(\qszone, 31238)  (\qsztwo, 29799)  (\qszthr, 32041)  (\qszfor, 19532)  (\qszfiv, 18696)  (\qszsix, 17069) };
+
+
+% \fixNum
+\begin{customlegend}[legend style={at={(3.55, 2.1) ,font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk, \gf,\rf,\cg,\itk,\pm}]
+    \addlegendimage{ourMark}
+    \addlegendimage{graphflowMark}
+    \addlegendimage{rapidflowMark}
+    \addlegendimage{caligMark}
+	\addlegendimage{instopkMark}
+    \addlegendimage{pbsmMark}
+	% \addlegendimage{graphflowMark}
+
+\end{customlegend}
+
+\begin{customlegend}[legend style={at={(4.35, 0.8) ,font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={ }]
+	
+\end{customlegend}
+
+
+\end{tikzpicture}
+\end{document}
+

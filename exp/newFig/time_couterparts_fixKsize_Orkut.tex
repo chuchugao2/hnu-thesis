@@ -1,0 +1,79 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{pgfplots}
+%\usepackage{pgfmath}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+%minimum size=10pt, inner sep=0pt
+
+\begin{document}
+\newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
+\newcommand{\labelfont}{25pt}
+\begin{tikzpicture}
+\input{../tikz_HEAD}
+\begin{semilogyaxis} %semilogyaxis
+[
+	ybar=0pt,
+	ymin = 0,
+	ymax=100000,
+        xmin = 0.5,
+        xmax =5.5,
+          width = 10 cm,
+         height = 7 cm,
+%    nodes near coords,
+	bar width = 10pt,
+%    ymajorgrids = true,
+    grid style=dashed,
+    ylabel = {Times(us)},
+    scaled x ticks = false,
+%    /pgf/number format/1000 sep={},
+%    xlabel = {VEND solution},
+%    xtick={\cxone, \cxtwo, \cxthr, \cxfor, \cxfiv},
+     xtick={1, 2, 3, 4,5},
+%    point meta={y*100},
+%    nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\%},
+%    nodes near coords,
+%    nodes near coords style={/pgf/number format/.cd,fixed zerofill,precision=0},
+%    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
+%    legend pos= north east,
+    legend cell align=left,
+    xlabel = {Top-k size},
+    ticklabel style = {font=\Large},
+	xticklabels={100,300,500,700,900},	
+    x label style = {font=\ptfont{\labelfont}},
+%	yticklabel={\pgfmathparse{\tick*100}\pgfmathprintnumber{\pgfmathresult}\%},
+%	xticklabel={$\pgfmathprintnumber{\tick}$K},
+    yticklabel style = {font=\Large},
+    xticklabel style = {font=\LARGE},
+    x label style = {at={(axis description cs:0.5,-0.05)},font=\ptfont{\labelfont}},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.0,0.5)},font=\ptfont{\labelfont}},
+    %legend style={at={(0.65, 0.99)}, draw=none, fill=none, anchor = north, legend columns = 2,row sep=-2pt, inner sep = 0pt, font=\ptfont{9pt}}
+    legend style={at={(0.98, 1), font=\ptfont{19pt}}, fill=none,draw=none,legend columns = 2 },
+    % extra y ticks={2300000000},
+    % extra y tick labels={\normalsize INF}
+]
+
+\addplot [dsmfill] coordinates {(1,20.72725 ) (2,658.16118) (3,662.94278 ) (4,670.67262) (5,1272.57734)};
+ 
+\addplot [localfill] coordinates {(1,54.14588) (2,1949.31255 ) (3,2365.55248 ) (4,2410.4249 ) (5,4304.14317)};
+ 
+\addplot [globalfill] coordinates {(1,78.48193 ) (2,3827.83005 ) (3,3797.35873 ) (4,3800.21084 ) (5,7524.97433)};
+
+\addplot [graphflowfill] coordinates {(1,363.46741 ) (2,5932.48455 ) (3,6586.74242 ) (4,7065.29759) (5,8526.00049)};
+
+\couterpartslegend
+\end{semilogyaxis}
+% \begin{customlegend}[legend style={at={(1, 1) ,font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={Dsm, Graphflow,Rapidflow}]
+%     \addlegendimage{graphflowfill}
+%     \addlegendimage{globalfill}
+% \end{customlegend}
+
+% \begin{customlegend}[legend style={at={(4, 1) ,font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={CaLiG,Instopk,PBSM }]
+% 	\addlegendimage{localfill}
+% 	\addlegendimage{dsmfill}
+% \end{customlegend}
+\end{tikzpicture}
+\end{document}

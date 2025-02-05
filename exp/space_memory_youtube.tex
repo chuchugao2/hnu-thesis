@@ -1,0 +1,90 @@
+
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{pgfplots}
+%\usepackage{pgfmath}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+%minimum size=10pt, inner sep=0pt
+
+\begin{document}
+\newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
+\newcommand{\labelfont}{25pt}
+\begin{tikzpicture}
+\input{./tikz_HEAD}
+\begin{semilogyaxis}
+[
+   ymin = 0,
+   ymax=60000000,
+%   ymax=0.9,
+%   xmin = 0,
+%   xmax =110
+%    width = 7cm,
+%    height = 6cm,
+%    nodes near coords,
+    point meta=rawy,
+    ymajorgrids = true,% add gridslines in ylabel
+    grid style=dashed,
+    ylabel = {Memory(KB)},
+%    scaled x ticks = base 10:-3,
+    /pgf/number format/1000 sep={},
+    xlabel = {Query Size},
+                xtick={\gNumone, \gNumtwo, \gNumthr, \gNumfor, \gNumfiv},
+%    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
+%    legend pos= north east,
+    legend cell align=left,
+    x label style = {font=\ptfont{\labelfont}},
+    ticklabel style = {font=\Large},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
+    extra y ticks={60000000},
+    extra y tick label={INF}
+    % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
+]
+
+\addplot [ourMark]
+coordinates {(\gNumone, 973537.20 ) (\gNumtwo, 971974.80  )  (\gNumthr, 976148.40  )  (\gNumfor, 979206.80  )  (\gNumfiv, 977722.40  )};
+
+\addplot [graphflowMark]
+coordinates {(\gNumone,1004080.00  ) (\gNumtwo, 1004080.00 )  (\gNumthr, 1004083.00 )  (\gNumfor, 1004096.00  )  (\gNumfiv,1004094.00  )};
+
+\addplot [rapidflowMark]
+coordinates {(\gNumone, 2487820.00  ) (\gNumtwo,2487820.00 )  (\gNumthr,2487820.00  )  (\gNumfor, 2487820.00  )  (\gNumfiv, 2487820.00 )};
+
+\addplot [caligMark]
+coordinates {(\gNumone, 3183593.06  ) (\gNumtwo, 3643857.45  )  (\gNumthr,3432580.03  )  (\gNumfor, 3309043.00 )  (\gNumfiv,3339430.93  )};
+
+\addplot [instopkMark]
+coordinates {(\gNumone, 60000000) (\gNumtwo, 60000000)  (\gNumthr, 60000000 )  (\gNumfor, 60000000 )  (\gNumfiv, 60000000 )};
+
+\addplot [pbsmMark]
+coordinates{(\gNumone,1383316.00 ) (\gNumtwo, 1383330.00  )  (\gNumthr,1383339.00  )  (\gNumfor, 1383326.00 )  (\gNumfiv, 1383344.00 )};
+
+
+\end{semilogyaxis}
+
+% 31238.77117	29799.44212	32041.23502	19532.96765	18696.43799	17069.86616
+%\addplot [vf2Mark]
+%coordinates {(\qszone, 31238)  (\qsztwo, 29799)  (\qszthr, 32041)  (\qszfor, 19532)  (\qszfiv, 18696)  (\qszsix, 17069) };
+
+
+% \fixNum
+\begin{customlegend}[legend style={at={(3.55, 4.2) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg,\itk,\pm}]
+    \addlegendimage{ourMark}
+    \addlegendimage{graphflowMark}
+    \addlegendimage{rapidflowMark}
+    \addlegendimage{caligMark}
+	\addlegendimage{instopkMark}
+    \addlegendimage{pbsmMark}
+	% \addlegendimage{graphflowMark}
+
+\end{customlegend}
+
+% \begin{customlegend}[legend style={at={(4.35, 0.8) ,font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={ }]
+% \end{customlegend}
+
+\end{tikzpicture}
+\end{document}
+

@@ -1,0 +1,121 @@
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{pgfplots}
+%\usepackage{pgfmath}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+%minimum size=10pt, inner sep=0pt
+
+\makeatletter
+\newcommand\resetstackedplots{
+\makeatletter
+\pgfplots@stacked@isfirstplottrue
+\makeatother
+\addplot [forget plot,draw=none] coordinates{(1,0) (2,0) (3,0) (4,0) (5,0) (6,0) };
+}
+\makeatother
+
+\begin{document}
+\newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
+\newcommand{\labelfont}{16pt}
+\begin{tikzpicture}
+\input{./tikz_HEAD}
+\begin{axis} %semilogyaxis
+[
+	ybar=0pt,
+	% ymax=3,
+	ybar stacked,
+    ymin=0,
+     ymax=20000,
+    xmin = 0.2,
+    xmax =6,
+    width = \scorewid cm,
+    height = \scorehgt cm,
+%    nodes near coords,
+	bar width = 15pt,
+%    ymajorgrids = true,
+    grid style=dashed,
+    ylabel = {Update Time (us)},
+    scaled x ticks = false,
+%    /pgf/number format/1000 sep={},
+%    xtick={\cxone, \cxtwo, \cxthr, \cxfor, \cxfiv},
+    xtick={1,2,3,4},
+%    point meta={y*100},
+%    nodes near coords={\pgfmathprintnumber\pgfplotspointmeta\%},
+    % nodes near coords,
+%    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
+%    legend pos= north east,
+    legend cell align=left,
+	xticklabels={\az,\lj,\hn,\ytb},
+%	yticklabel={\pgfmathparse{\tick*100}\pgfmathprintnumber{\pgfmathresult}\%},
+%	xticklabel={$\pgfmathprintnumber{\tick}$K},
+    yticklabel style = {font=\Large},
+            xticklabel style = {font=\LARGE},
+    x label style = {at={(axis description cs:0.5,-0.05)},font=\ptfont{\labelfont}},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.05,0.5)},font=\ptfont{\labelfont}},
+    %legend style={at={(0.65, 0.99)}, draw=none, fill=none, anchor = north, legend columns = 2,row sep=-2pt, inner sep = 0pt, font=\ptfont{9pt}}
+]
+
+\def\xoffset{.6cm}
+
+\addplot +[onefill,bar shift=-\xoffset]
+coordinates { (1, 10.01 ) (2, 1.83 ) (3, 70.24 ) (4,632.76 )  };
+
+\addplot +[onefill,fill=red!60, bar shift=-\xoffset]
+coordinates { (1, 25.76 ) (2, 8.50 ) (3, 776.46 ) (4, 41.03 ) };
+\resetstackedplots
+
+\addplot +[twofill,bar shift=-\xoffset*2]
+coordinates { (1, 14.83 ) (2, 2.57 ) (3, 3732.55 ) (4, 2.70 )   };
+
+\addplot +[twofill,fill=red!60, bar shift=-\xoffset*2]
+coordinates { (1, 66.85 ) (2, 18.01 ) (3,144.50) (4, 44.72 )  };
+\resetstackedplots
+
+\addplot +[thrfill,bar shift=0]
+coordinates { (1,17.76 ) (2, 2.91 ) (3, 948.68 ) (4,107.55 )};
+
+\addplot +[thrfill,fill=red!60, bar shift=0]
+coordinates { (1, 13.95 ) (2, 18.41 ) (3, 11496.08 ) (4, 31.50 ) };
+
+\resetstackedplots
+
+\addplot +[forfill,bar shift=\xoffset]
+coordinates { (1, 41.49 ) (2, 6.96 ) (3,3271.20 ) (4, 1283.40 )  };
+
+\addplot +[forfill,fill=red!60, bar shift=\xoffset]
+coordinates { (1, 16.26 ) (2, 9.66 ) (3, 16811.58 ) (4, 13.82 ) };
+
+
+\resetstackedplots
+
+\addplot +[fivfill,bar shift=\xoffset*2]
+coordinates { (1, 25.94 ) (2, 17.07 ) (3, 3558.29 ) (4, 97.25 )};
+
+\addplot +[fivfill,fill=red!60, bar shift=\xoffset*2]
+coordinates { (1, 26.59 ) (2, 9.91 ) (3, 14169.96 ) (4, 14.19 )};
+\resetstackedplots
+
+
+%
+%\addplot [ourMark]
+%coordinates { (\cxone, 1159706.42) (\cxtwo, 834606.5614) (\cxthr, 411559.6093) (\cxfor, 312853.7032) (\cxfiv, 203976.1046) };
+%
+%%
+%\addplot [nomsMark]
+%coordinates { (\cxone, 648535.7306) (\cxtwo, 148284.8865) (\cxthr, 102832.3357) (\cxfor, 65896.87085) (\cxfiv, 59906.18457) };
+
+
+%\addplot [vf2Mark]
+%coordinates { (\cxone, 404823.6527) (\cxtwo, 144567.6672) (\cxthr, 66434.36858) (\cxfor, 44795.09808) (\cxfiv, 35539.06114) };
+
+
+%\ilegend
+\datThrStackedLegend
+\end{axis}
+\end{tikzpicture}
+\end{document}
+

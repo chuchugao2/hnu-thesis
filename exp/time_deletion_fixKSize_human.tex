@@ -1,0 +1,90 @@
+
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{ctex}
+\usepackage{pgfplots}
+%\usepackage{pgfmath}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+%minimum size=10pt, inner sep=0pt
+
+\begin{document}
+\newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
+\newcommand{\labelfont}{20pt}
+\begin{tikzpicture}
+\input{./tikz_HEAD}
+\begin{semilogyaxis}
+[
+    ymin = 0,
+    ymax=64000000,
+    % ytick={10,1000,10000,100000,10000000}, % 手动设置刻度位置
+    % yticklabels={$10^1$,$10^3$,$10^4$,$10^5$,$10^7$}, % 刻度标签
+    point meta=rawy,
+    ymajorgrids = true,
+    grid style=dashed,
+    ylabel = {平均时间(us)},
+%    scaled x ticks = base 10:-3,
+    /pgf/number format/1000 sep={},
+    xlabel = {Top-k 大小},
+    xtick={\gKNumone, \gKNumtwo, \gKNumthr, \gKNumfor, \gKNumfiv},
+%    legend pos= north east,
+    legend cell align=left,
+    x label style = {font=\ptfont{\labelfont}},
+    ticklabel style = {font=\Large},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
+    extra y ticks={64000000},
+    extra y tick label={INF},
+    % legend style={at={(0.48, 0.64)},font=\ptfont{19pt},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
+    % legend cell align=left,
+    % legend columns = 2
+    % extra y ticks={60000000},
+    % extra y tick label={INF}s
+    % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
+]
+
+\addplot [ourMark]
+coordinates {(\gKNumone, 144.88954 ) (\gKNumtwo, 164.68556 )  (\gKNumthr,192.79882 )  (\gKNumfor,225.86458 )  (\gKNumfiv, 322.88262)};
+
+\addplot [graphflowMark]
+coordinates {(\gKNumone, 4872.73052) (\gKNumtwo,4965.87884 )  (\gKNumthr, 4276.21754 )  (\gKNumfor, 3941.48562 )  (\gKNumfiv, 4252.80232)};
+
+\addplot [rapidflowMark]
+coordinates {(\gKNumone, 3468.7852 ) (\gKNumtwo, 3454.97044 )  (\gKNumthr, 3469.58926 )  (\gKNumfor,3973.6842 )  (\gKNumfiv, 3454.56642)};
+
+\addplot [caligMark]
+coordinates {(\gKNumone, 4925.81) (\gKNumtwo,5452.12)  (\gKNumthr,5154.46)  (\gKNumfor,5505.99)  (\gKNumfiv,5643.4)};
+
+\addplot [instopkMark]
+coordinates {(\gKNumone, 444929.2) (\gKNumtwo, 426735)  (\gKNumthr, 455668.6 )  (\gKNumfor, 425287.8 )  (\gKNumfiv,487739.7 )};
+
+\addplot [pbsmMark]
+coordinates{(\gKNumone,3215786.519) (\gKNumtwo, 2811566.015 )  (\gKNumthr, 3915784.499)  (\gKNumfor, 4115791.237)  (\gKNumfiv, 3515787.361)};
+
+% \fixksizelegend
+
+\end{semilogyaxis}
+
+% 31238.77117	29799.44212	32041.23502	19532.96765	18696.43799	17069.86616
+%\addplot [vf2Mark]
+%coordinates {(\qszone, 31238)  (\qsztwo, 29799)  (\qszthr, 32041)  (\qszfor, 19532)  (\qszfiv, 18696)  (\qszsix, 17069) };
+
+\begin{customlegend}[legend style={at={(3.55, 3.3) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg}]
+    \addlegendimage{ourMark}
+    \addlegendimage{graphflowMark}
+    \addlegendimage{rapidflowMark}
+    \addlegendimage{caligMark}
+	% \addlegendimage{graphflowMark}
+
+\end{customlegend}
+
+\begin{customlegend}[legend style={at={(2.55, 1.6) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\itk,\pm}]
+    \addlegendimage{instopkMark}
+    \addlegendimage{pbsmMark}
+\end{customlegend}
+
+\end{tikzpicture}
+\end{document}
+

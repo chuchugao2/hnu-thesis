@@ -1,0 +1,78 @@
+
+\documentclass{standalone}
+\usepackage{pgfplots}
+\usepackage{verbatim}
+\usepackage{tikz}
+\usepackage{ctex}
+\usepackage{pgfplots}
+%\usepackage{pgfmath}
+\usetikzlibrary{patterns}
+\usetikzlibrary{shapes}
+\usetikzlibrary{arrows}
+%minimum size=10pt, inner sep=0pt
+
+\begin{document}
+\newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
+\newcommand{\labelfont}{20pt}
+\begin{tikzpicture}
+\input{./tikz_HEAD}
+\begin{semilogyaxis}
+[
+    ymin = 0,
+    ymax=64000000,
+    % ytick={10,1000,10000,100000,10000000}, % 手动设置刻度位置
+    % yticklabels={$10^1$,$10^3$,$10^4$,$10^5$,$10^7$}, % 刻度标签
+    point meta=rawy,
+    ymajorgrids = true,
+    grid style=dashed,
+    ylabel = {Time(us)},
+%    scaled x ticks = base 10:-3,
+    /pgf/number format/1000 sep={},
+    xlabel = {查询图大小},
+    xtick={\gNumone, \gNumtwo, \gNumthr, \gNumfor, \gNumfiv},
+%    legend pos= north east,
+    legend cell align=left,
+    x label style = {font=\ptfont{\labelfont}},
+    ticklabel style = {font=\Large},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
+    extra y ticks={64000000},
+    extra y tick label={INF},
+    legend style={at={(0.5, 0.6)},font=\ptfont{19pt},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
+    legend cell align=left,
+    legend columns = 2
+    % extra y ticks={60000000},
+    % extra y tick label={INF}s
+    % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
+]
+
+\addplot [ourMark]
+coordinates {(\gNumone, 2.68  ) (\gNumtwo, 1.84 )  (\gNumthr,3.32  )  (\gNumfor, 7.21  )  (\gNumfiv, 6.09  )};
+
+\addplot [graphflowMark]
+coordinates {(\gNumone, 117142.3047) (\gNumtwo,117899.9953 )  (\gNumthr, 406995.406 )  (\gNumfor, 477778.1548 )  (\gNumfiv, 312115.366)};
+
+\addplot [rapidflowMark]
+coordinates {(\gNumone, 133263.9315 ) (\gNumtwo, 234680.1779 )  (\gNumthr, 51237.9163 )  (\gNumfor, 47160.25474 )  (\gNumfiv, 120370.28936)};
+
+\addplot [caligMark]
+coordinates {(\gNumone, 140432.82) (\gNumtwo, 164480.57)  (\gNumthr,154969.03)  (\gNumfor,163149.36)  (\gNumfiv,143887.92)};
+
+\addplot [instopkMark]
+coordinates {(\gNumone, 64000000 ) (\gNumtwo, 64000000)  (\gNumthr, 64000000 )  (\gNumfor, 64000000 )  (\gNumfiv,64000000 )};
+
+\addplot [pbsmMark]
+coordinates{(\gNumone,1215269 ) (\gNumtwo, 1615861 )  (\gNumthr, 1416067)  (\gNumfor, 1316683 )  (\gNumfiv, 1218027 )};
+
+\fixksizelegend
+
+\end{semilogyaxis}
+
+% 31238.77117	29799.44212	32041.23502	19532.96765	18696.43799	17069.86616
+%\addplot [vf2Mark]
+%coordinates {(\qszone, 31238)  (\qsztwo, 29799)  (\qszthr, 32041)  (\qszfor, 19532)  (\qszfiv, 18696)  (\qszsix, 17069) };
+
+
+
+\end{tikzpicture}
+\end{document}
+
