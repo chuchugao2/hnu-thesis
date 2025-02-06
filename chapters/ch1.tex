@@ -41,7 +41,7 @@ TurboFlux 的核心优势在于其增量更新能力，能够快速定位受影�
 最近，国内复旦大学郑卫国教授团队提出了具有成本效益的索引方法CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}，旨在减少回溯的搜索空间。
 CaLiG 通过构建高效的索引结构，能够在匹配过程中快速剪枝，从而更高效地完成匹配任务。该方法在处理具有复杂拓扑结构的查询图时表现出较好的性能。
 
-此外，国内的一些其他团队也在联系子图匹配领域作出了重要的贡献，如北京大学的高军教授团队邹磊教授团队、北京航天航空大学的马帅教授团队等，都在该领域开展了深入研究，提出了多种优化策略。
+此外，国内的一些其他团队也在连续子图匹配领域作出了重要的贡献，如北京大学的高军教授团队邹磊教授团队、北京航天航空大学的马帅教授团队等，都在该领域开展了深入研究，提出了多种优化策略。
 尽管上述这些成熟的连续子图匹配方法在提高匹配效率方面取得了显著进展，但它们普遍存在一个共同点：大多数方法仅对搜索过程中的中间结果进行剪枝，而对最终结果集的个数并未做限制。因此，在实际应用中，可能面临将所有子图匹配结果根据密度优先级重新排序的挑战，并筛选出前k个最优匹配结果。此过程往往会浪费大量时间，尤其是在匹配结果集非常庞大的情况下，常常只能返回匹配的总数，或者随机返回最多k个结果，而无法精确获取最优的k个匹配结果。
 \subsection{现有的Top-k密集子图挖掘问题}
 在现有的Top k密集子图发现（Top K Dense Subgraph Mining）工作中~\cite{dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12,dsm-noweight-Balalau-DBLP:conf/wsdm/BalalauBCGS15,dsm-noweight-Bonchi-DBLP:journals/corr/abs-2007-01533,dsm-noweight-Dondi-DBLP:journals/corr/abs-2002-07695,dsm-noweight-Fang-DBLP:journals/pvldb/FangYCLL19,dsm-noweight-Gabert-DBLP:conf/wsdm/GabertPC21,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,dsm-noweight-Ma-DBLP:journals/pvldb/MaCLH22,dsm-noweight-Mathieu-DBLP:journals/corr/abs-2010-07794,dsm-noweight-McGregor-DBLP:journals/corr/McGregorTVV15,dsm-noweight-Rozenshtein-DBLP:journals/tkdd/RozenshteinTG17,dsm-noweight-Saha-DBLP:journals/corr/abs-2212-08820,dsm-noweight-Tsourakakis-DBLP:conf/kdd/TsourakakisBGGT13,dsm-noweight-Valari-DBLP:conf/ssdbm/ValariKP12,dsm-noweight-Zhao-DBLP:conf/icalip/ZhaoQYB14,dsm-weight-Angel-DBLP:journals/vldb/AngelKSSST14,dsm-weight-Ma-DBLP:conf/icde/MaHWLH17,dsm-weight-Muhammad-DBLP:conf/cikm/NasirGMG17},

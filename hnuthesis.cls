@@ -120,7 +120,7 @@
 \newcommand\hnu@abstractname{摘\quad 要}
 \newcommand\hnu@acknowledgementsname{致\quad 谢}
 \newcommand\hnu@tocname{目\quad 录}
-\newcommand\hnu@summaryname{总结与展望}
+\newcommand\hnu@summaryname{结论}
 \newcommand\hnu@notationname{符号说明}
 \def\equationautorefname~#1\null{公式~(#1)\null}%
 \def\footnoteautorefname{脚注}%
