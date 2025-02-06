@@ -8,11 +8,12 @@
 \usetikzlibrary{patterns}
 \usetikzlibrary{shapes}
 \usetikzlibrary{arrows}
+\usepackage{ctex}
 %minimum size=10pt, inner sep=0pt
 
 \begin{document}
 \newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
-\newcommand{\labelfont}{25pt}
+\newcommand{\labelfont}{20pt}
 \begin{tikzpicture}
 \input{./tikz_HEAD}
 \begin{semilogyaxis}
@@ -28,17 +29,17 @@
     point meta=rawy,
     ymajorgrids = true,% add gridslines in ylabel
     grid style=dashed,
-    ylabel = {Memory(KB)},
+    ylabel = {内存(KB)},
 %    scaled x ticks = base 10:-3,
     /pgf/number format/1000 sep={},
-    xlabel = {Query Size},
+    xlabel = {查询图大小},
                 xtick={\gNumone, \gNumtwo, \gNumthr, \gNumfor, \gNumfiv},
 %    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
 %    legend pos= north east,
     legend cell align=left,
     x label style = {font=\ptfont{\labelfont}},
     ticklabel style = {font=\Large},
-    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.04,0.5)},font=\ptfont{\labelfont}},
     extra y ticks={60000000},
     extra y tick label={INF}
     % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
@@ -71,7 +72,7 @@ coordinates{(\gNumone,1383316.00 ) (\gNumtwo, 1383330.00  )  (\gNumthr,1383339.0
 
 
 % \fixNum
-\begin{customlegend}[legend style={at={(3.55, 4.2) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg,\itk,\pm}]
+\begin{customlegend}[legend style={at={(3.45, 4.4) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg,\itk,\pm}]
     \addlegendimage{ourMark}
     \addlegendimage{graphflowMark}
     \addlegendimage{rapidflowMark}

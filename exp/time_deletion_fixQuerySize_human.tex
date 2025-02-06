@@ -35,11 +35,11 @@
     x label style = {font=\ptfont{\labelfont}},
     ticklabel style = {font=\Large},
     y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
-    legend style={at={(0.5, 0.7)},font=\ptfont{19pt},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
-    legend cell align=left,
-    legend columns = 2
-    % extra y ticks={60000000},
-    % extra y tick label={INF}
+    extra y ticks={60000000},
+    extra y tick label={INF}
+    % legend style={at={(0.5, 0.7)},font=\ptfont{19pt},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
+    % legend cell align=left,
+    % legend columns = 2
     % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
 ]
 
@@ -61,7 +61,7 @@ coordinates {(\gNumone, 515474.6) (\gNumtwo, 444198.7)  (\gNumthr, 458383.6 )  (
 \addplot [pbsmMark]
 coordinates{(\gNumone,2245980.889 ) (\gNumtwo, 3276965.701 )  (\gNumthr, 2146034.841)  (\gNumfor, 3972023.407 )  (\gNumfiv, 3095220.3185)};
 
-\fixksizelegend
+% \fixksizelegend
 
 \end{semilogyaxis}
 
@@ -69,18 +69,18 @@ coordinates{(\gNumone,2245980.889 ) (\gNumtwo, 3276965.701 )  (\gNumthr, 2146034
 %\addplot [vf2Mark]
 %coordinates {(\qszone, 31238)  (\qsztwo, 29799)  (\qszthr, 32041)  (\qszfor, 19532)  (\qszfiv, 18696)  (\qszsix, 17069) };
 
-% \begin{customlegend}[legend style={at={(1.6, 3.5),font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 1,legend cell align=left,legend entries={\ctk,\gf,\itk}]
-%     \addlegendimage{ourMark}
-%     \addlegendimage{rapidflowMark}
-%     \addlegendimage{instopkMark}
-%     \end{customlegend}
+\begin{customlegend}[legend style={at={(3.45, 3.8) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg}]
+    \addlegendimage{ourMark}
+    \addlegendimage{graphflowMark}
+    \addlegendimage{rapidflowMark}
+    \addlegendimage{caligMark}
 
-% \begin{customlegend}[legend style={at={(5, 3.5),font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 1,legend cell align=left,legend entries={\gf,\cg,\pm}]
+\end{customlegend}
 
-%     \addlegendimage{graphflowMark}
-%     \addlegendimage{caligMark}
-%     \addlegendimage{pbsmMark}
-%     \end{customlegend}
+\begin{customlegend}[legend style={at={(2.55, 1.7) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\itk,\pm}]
+    \addlegendimage{instopkMark}
+    \addlegendimage{pbsmMark}
+\end{customlegend}
 
 \end{tikzpicture}
 \end{document}

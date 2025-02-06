@@ -7,11 +7,12 @@
 \usetikzlibrary{patterns}
 \usetikzlibrary{shapes}
 \usetikzlibrary{arrows}
+\usepackage{ctex}
 %minimum size=10pt, inner sep=0pt
 
 \begin{document}
 \newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
-\newcommand{\labelfont}{25pt}
+\newcommand{\labelfont}{20pt}
 \begin{tikzpicture}
 \input{../tikz_HEAD}
 \begin{semilogyaxis} %semilogyaxis
@@ -27,7 +28,7 @@
 	bar width = 10pt,
 %    ymajorgrids = true,
     grid style=dashed,
-    ylabel = {Times(us)},
+    ylabel = {平均时间(us)},
     scaled x ticks = false,
 %    /pgf/number format/1000 sep={},
 %    xlabel = {VEND solution},
@@ -40,7 +41,7 @@
 %    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
 %    legend pos= north east,
     legend cell align=left,
-    xlabel = {Top-k size},
+    xlabel = {Top-k 大小},
     ticklabel style = {font=\Large},
 	xticklabels={100,300,500,700,900},	
     x label style = {font=\ptfont{\labelfont}},	
@@ -51,7 +52,7 @@
     x label style = {at={(axis description cs:0.5,-0.05)},font=\ptfont{\labelfont}},
     y label style = {inner sep=0pt,at={(axis description cs:-0.0,0.5)},font=\ptfont{\labelfont}},
     %legend style={at={(0.65, 0.99)}, draw=none, fill=none, anchor = north, legend columns = 2,row sep=-2pt, inner sep = 0pt, font=\ptfont{9pt}}
-    legend style={at={(0.98, 1), font=\ptfont{19pt}}, fill=none,draw=none,legend columns = 2 },
+    legend style={at={(0.98, 1), font=\ptfont{17pt}}, fill=none,draw=none,legend columns = 2 },
     % extra y ticks={2300000000},
     % extra y tick labels={\normalsize INF}
 ]

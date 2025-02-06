@@ -141,74 +141,73 @@
   \textbf{基于上界的递归搜索。} 在我们的搜索过程中，对于每个部分匹配 $g^i$，如果 $gBound(g^i)$ 无法在已存在的 $G_t$ 匹配的密度排名中位列前 $k$，我们可以安全地剪枝掉 $g^i$（参见算法 \ref{alg:find-dense-matches-gBound}  Lines \ref{code:B-basic-begin}-\ref{code:B-basic-end}）。
   
   对于每一种匹配顺序 $\Phi$，我们可以 $Qstar(i)$（$1 \leq i \leq |V_Q|$）下维护相应的星形结构子图的最大密度，这正是全局 MWstar。显然，全局 MWstar 的空间开销是 $O(|E_Q|*|V_Q|)$，这是可以忽略不计的。
-  
-  \begin{algorithm}[h]
-  \small
-  \caption{全局 MWstar 维护}
-  \label{alg:base-mwstar:update}
-  \KwIn{ $G_t$, $Q$ 和 $o_t={op, v_1, v_2}$}
-  \KwOut{更新后的全局 MWstar}
-  \If{$op = +$}{
-    \ForEach{$(u_{i_1},u_{i_2})\in E_{Q}$ 匹配 $(v_1, v_2)$} {
-    	\ForEach{匹配顺序 $\Phi$}{
-    		\If{$u_{i_1}\in LN(u_{i_2})$}{
-    			UpdateDensity($v_{2}$, $u_{i_2}$,$\Phi$) \\
-    		}
-    		\uElse { 
-    			UpdateDensity($v_{1}$, $u_{i_1}$,$\Phi$) \\
-    		}
-		}
-	}
-} % If  
-\If{$op=-$}{
-		设 $g^\prime$ 表示 $A_{G_t, Qstar(i)}$ 中标记为最密集的部分匹配（即 $den(g)=den(Qstar(i))$） \label{code:record-denest} \\
-        \If{$(v_1,v_2)\notin E_{g^\prime}$}{ \label{code:not-hit-return:begin}
-            \Return \label{code:not-hit-return:end}
-        }   
-       \ForEach{$v\in V_{G_t}$}{
-       		\ForEach{$u\in V_Q$}{
-       			\If{$L(v) = L(u)$}{
-       				\ForEach{匹配顺序 $\Phi$}{
-       					updateDensity($v$, $u$, $\Phi$)
-       				}
-       			}
-       		}
+  \begin{algorithm}[H]
+    \scriptsize
+    \caption{全局 MWstar 维护}
+    \label{alg:base-mwstar:update}
+    \KwIn{ $G_t$, $Q$ 和 $o_t={op, v_1, v_2}$}
+    \KwOut{更新后的全局 MWstar}
+    \If{$op = +$}{
+      \ForEach{$(u_{i_1},u_{i_2})\in E_{Q}$ 匹配 $(v_1, v_2)$} {
+          \ForEach{匹配顺序 $\Phi$}{
+              \If{$u_{i_1}\in LN(u_{i_2})$}{
+                  UpdateDensity($v_{2}$, $u_{i_2}$,$\Phi$) \\
+              }
+              \uElse { 
+                  UpdateDensity($v_{1}$, $u_{i_1}$,$\Phi$) \\
+              }
+          }
+      }
+  } % If  
+  \If{$op=-$}{
+          设 $g^\prime$ 表示 $A_{G_t, Qstar(i)}$ 中标记为最密集的部分匹配（即 $den(g)=den(Qstar(i))$） \label{code:record-denest} \\
+          \If{$(v_1,v_2)\notin E_{g^\prime}$}{ \label{code:not-hit-return:begin}
+              \Return \label{code:not-hit-return:end}
+          }   
+         \ForEach{$v\in V_{G_t}$}{
+                 \ForEach{$u\in V_Q$}{
+                     \If{$L(v) = L(u)$}{
+                         \ForEach{匹配顺序 $\Phi$}{
+                             updateDensity($v$, $u$, $\Phi$)
+                         }
+                     }
+                 }
+         }
        }
-     }
-
-\If{$op = +$}{
-    \ForEach{$(u_{i_1},u_{i_2})\in E_{Q}$ 匹配 $(v_1, v_2)$} {
-    	\ForEach{匹配顺序 $\Phi$}{
-    		\If{$u_{i_1}\in LN(u_{i_2})$}{
-    			UpdateDensity($v_{2}$, $u_{i_2}$,$\Phi$) \\
-    		}
-    		\uElse { 
-    			UpdateDensity($v_{1}$, $u_{i_1}$,$\Phi$) \\
-    		}
-		}
-	}
-} % If  
-
-\SetKwFunction{FupdateMWstar}{updateDensity}
-\SetKwProg{Fn}{Function}{:}{\KwRet}
-\Fn{\FupdateMWstar{$u_{i}$,$v_{j}$,$\Phi$}}{
-     /* 为每个 $v\in V_{G_t}$ 保持其邻接节点和对应边权重的排序是很简单的 */   \label{code:basic-den-update:begin}  \label{code:basic-sorted:begin}\\
-     假设 $LN(u_i) =$ \{$u_{i_1}$, $u_{i_2}$, $\cdots$, $u_{i_x}$\} \\
-     遍历 $N_{G_t}(v_j)$ 一次，计算出 $x$ 个不同的顶点 {$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$}
-     其中 $L(v_{j_{x^\prime}}) = L(u_{i_{x^\prime}})$ ($1\leq x^\prime\leq x$)   \label{code:basic-sorted:end} \\
-     \If{这 $x$ 个顶点存在}{
-     令 $g^\prime$ 表示由边从 $v_j$ 到 \{$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$\} 组成的子图 \\
-     \If{$den(g^\prime)>den(Qstar(i))$}{
-     $den(Qstar(u_i))$ = $den(g^\prime)$ \\
-     将 $g^\prime$ 标记为 $Qstar(i)$ 的最密匹配
-     }
-     }
-     \uElse{
-     $den(Qstar(u_i)) = 0$; \label{code:basic-den-update:end}
-     }
-     }
-     \end{algorithm}
-     
+  
+  \If{$op = +$}{
+      \ForEach{$(u_{i_1},u_{i_2})\in E_{Q}$ 匹配 $(v_1, v_2)$} {
+          \ForEach{匹配顺序 $\Phi$}{
+              \If{$u_{i_1}\in LN(u_{i_2})$}{
+                  UpdateDensity($v_{2}$, $u_{i_2}$,$\Phi$) \\
+              }
+              \uElse { 
+                  UpdateDensity($v_{1}$, $u_{i_1}$,$\Phi$) \\
+              }
+          }
+      }
+  } % If  
+  
+  \SetKwFunction{FupdateMWstar}{updateDensity}
+  \SetKwProg{Fn}{Function}{:}{\KwRet}
+  \Fn{\FupdateMWstar{$u_{i}$,$v_{j}$,$\Phi$}}{
+       /* 为每个 $v\in V_{G_t}$ 保持其邻接节点和对应边权重的排序是很简单的 */   \label{code:basic-den-update:begin}  \label{code:basic-sorted:begin}\\
+       假设 $LN(u_i) =$ \{$u_{i_1}$, $u_{i_2}$, $\cdots$, $u_{i_x}$\} \\
+       遍历 $N_{G_t}(v_j)$ 一次，计算出 $x$ 个不同的顶点 {$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$}
+       其中 $L(v_{j_{x^\prime}}) = L(u_{i_{x^\prime}})$ ($1\leq x^\prime\leq x$)   \label{code:basic-sorted:end} \\
+       \If{这 $x$ 个顶点存在}{
+       令 $g^\prime$ 表示由边从 $v_j$ 到 \{$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$\} 组成的子图 \\
+       \If{$den(g^\prime)>den(Qstar(i))$}{
+       $den(Qstar(u_i))$ = $den(g^\prime)$ \\
+       将 $g^\prime$ 标记为 $Qstar(i)$ 的最密匹配
+       }
+       }
+       \uElse{
+       $den(Qstar(u_i)) = 0$; \label{code:basic-den-update:end}
+       }
+       }
+\end{algorithm}
+  
      算法 \ref{alg:base-mwstar:update} 通过更新 $o_t=(op, v_1, v_2)$ 来维护全局 MWstar，其中 $(v_1, v_2)$ 匹配 $(u_{i_1}, u_{i_2})$。
      
      如果 $o_t$ 是插入操作，
@@ -385,6 +384,38 @@ $g_1^3$ 和 $g_2^3$ 不会被剪枝，因为 $gBound(g_1^3) = gBound(g_2^3) = 50
 如前所述，如果 $C_{g^i}(u_j)$ 被标记为未定义，我们在计算 $lBound(g^i)$ 时将 $den(Qstar(j), C_{g^i}(u_j))$ 替换为 $den(Qstar(j))$（来自全局 MWstar）。
 然后，我们可以从 $g^2$ 开始递归地进行 面向CSM-TopK 的搜索。
 
+\begin{algorithm}[H]
+    \small
+    \caption{基于全局和局部 MWstars 的 CSM-TopK 搜索}
+    \label{alg:localmwstar:framework}
+    \KwIn{一个动态图 $\iG = (G_0, \Delta)$，查询图$Q$ 和 参数$k$}
+    \KwOut{对于每个 $G_t$，报告 $A^k_t = {g_1, g_2, \ldots, g_k}$}
+    % \tcc{离线预处理}
+    BuildMatchingOrder($Q$, $u_1$, $u_2$) 对于每个 $(u_1, u_2) \in Q$ \\
+    BuildMWstar($G_0$, $Q$, $\Phi$) 对每个 $\Phi$  \\
+    计算 $A_0^k$ 在 $G_0$ 上的查询 $Q$ \\
+    % \tcc{在线预处理}
+    \ForEach{$o_t = (op, v_1, v_2) \in \Delta$}{
+    应用 $o_t$ 到 $G_{t-1}$ 形成 $G_t$，并更新 MWstar \\
+    初始化 $A^k_{t}$ 为 $A^k_{t-1}$ \\
+    \If{$op = +$}{
+    \ForEach{$(u_1, u_2) \in E_{Q_t}$ 匹配 $(v_1, v_2)$} {\label{local:code:baseline:begin}
+    令 $g^2 = {v_1, v_2}$ \\
+    设 $v_1$，$v_2$ 为已访问\\
+    令 $\Phi$ 为匹配顺序，并从 $u_1$，$u_2$ 开始 \\
+    \ForEach{$u_j \in V_Q \setminus V_{q^2}$}{ \label{code:init-lcs:begin}
+    根据定义 \ref{def:local-candidate-set} 初始化 $C_{g^2}(u_j)$ \label{code:init-lcs:end}
+    }
+    FindDenseMatches-Both$(G_t, Q, \Phi, g^2, A_t^k, k)$ \label{local:code:baseline:end} \
+    /* 见算法 \ref{alg:find-dense-matches-formal} 获取详细过程 */
+    }
+    }
+    \If{$op = -$}{
+    执行与算法 \ref{alg:baseline:framework} 中第 \ref{code:base-del:begin}-\ref{code:base-del:end} 行对称的操作
+    }
+    }
+    \end{algorithm}
+
 对于每个部分匹配 $g^i$，如果满足以下任意条件之一，我们可以安全地剪枝 $g^i$：
 \begin{itemize}
 \item \textcircled{1} 有一个局部候选集为空（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:lcs-empty:begin}-\ref{code:lcs-empty:end} 行），
@@ -399,38 +430,61 @@ $g_1^3$ 和 $g_2^3$ 不会被剪枝，因为 $gBound(g_1^3) = gBound(g_2^3) = 50
 \item 如果 $u_j$ 的局部候选集已存在，则根据定义 \ref{def:local-candidate-set}，我们使用基于访问性的过滤，将 $C_{g^{i+1}}(u_j)$ 设置为 $C_{g^i}(u_j) \cap N_{G_t}^{L(u_j)}(v_{i+1})$。
 \end{itemize}
 
+\begin{algorithm}[H]
+    \scriptsize
+    \caption{利用 $lBound$ 进行递归搜索}
+    \label{alg:find-dense-matches-formal}
+    \SetKwBlock{iFunc}{Procedure}{End Procedure}
+    \iFunc(FindDenseMatches-Both{(}$G_t, Q, \Phi, g^i, A, k${)})
+    {
+    令 $g_{min}$ 为 $A$ 中密度最小的匹配 \\
+    \If{$|g^i|=|V_Q|$}{
+    \If{$|A|<k \lor den(g_{min}) < den(g^i)$ } {
+    将 $g^i$ 添加到 $A$ 中 。\\
+    如果 $|A|>k$，则从 $A$ 中移除 $g_{min}$\
+    \Return
+    }
+    }
+    初始化 $lBound(g^i)$ 为 $den(g^i)$\
+    \ForEach{$u_{j} \in V_Q \setminus V_{q^i}$}{ \label{code:lcs-empty:begin}
+    \If{$C_{g^i}(u_j) = \emptyset$}{
+    \Return   \label{code:lcs-empty:end}
+    }
+    \If{$C_{g^i}(u_j)$ 未定义}{
+    /* 来自全局 MWstar 的密度 */ \\
+    $lBound(g^i) += den(Qstar(j))$
+    }
+    \Else{
+                    /* 来自局部 MWstar 的密度 */  \\
+    $lBound(g^i) += den(Qstar(j), C_{g^i}(u_j))$
+    }
+    
+    }
+    
+    \If{$|A|=k \land lBound(g^i) \leq den(g_{min})$}{ \label{code:B-formal:begin}
+        \Return \label{code:B-formal:end}
+    }
+    \ForEach{$v_{i+1} \in C_{g^i}(u_{i+1})$}{ \label{code:formal-extension:begin}
+    将 $v_{i+1}$ 标记为已访问，并令 $g^{i+1} = g^i \cup {v_{i+1}}$ \\
+    \ForEach{$u_{j} \in RN(u_{i+1})$}{ \label{code:formal-each-rn:begin}
+    \If{$C_{g^{i}}(u_{j})$ 未定义}{
+        $C_{g^{i+1}}(u_{j}) = N_{G_t}^{L(u_{j})}(v_{i+1})$ 
+    }
+    \Else{
+        $C_{g^{i+1}}(u_{j}) = C_{g^{i}}(u_{j}) \cap N_{G_t}^{L(u_{j})}(v_{i+1})$ \label{code:formal-each-rn:end}
+    }
+    $C_{g^{i}}(u_{j}) =$ $(C_{g^{i}}(u_{j})).filterVisited()$
+    }  
+    FindDenseMatches-Both{(}$G_t, Q, \Phi, g^{i+1}, A, k${)} \\ 
+    将 $v_{i+1}$ 标记为未访问 \label{code:formal-extension:end}  \\
+    }
+    
+    \Return 
+    
+    }
+    \end{algorithm}
 
-\begin{algorithm}[h]
-\small
-\caption{基于全局和局部 MWstars 的 CSM-TopK 搜索}
-\label{alg:localmwstar:framework}
-\KwIn{一个动态图 $\iG = (G_0, \Delta)$，查询图$Q$ 和 参数$k$}
-\KwOut{对于每个 $G_t$，报告 $A^k_t = {g_1, g_2, \ldots, g_k}$}
-% \tcc{离线预处理}
-BuildMatchingOrder($Q$, $u_1$, $u_2$) 对于每个 $(u_1, u_2) \in Q$ \\
-BuildMWstar($G_0$, $Q$, $\Phi$) 对每个 $\Phi$  \\
-计算 $A_0^k$ 在 $G_0$ 上的查询 $Q$ \\
-% \tcc{在线预处理}
-\ForEach{$o_t = (op, v_1, v_2) \in \Delta$}{
-应用 $o_t$ 到 $G_{t-1}$ 形成 $G_t$，并更新 MWstar \\
-初始化 $A^k_{t}$ 为 $A^k_{t-1}$ \\
-\If{$op = +$}{
-\ForEach{$(u_1, u_2) \in E_{Q_t}$ 匹配 $(v_1, v_2)$} {\label{local:code:baseline:begin}
-令 $g^2 = {v_1, v_2}$ \\
-设 $v_1$，$v_2$ 为已访问\\
-令 $\Phi$ 为匹配顺序，并从 $u_1$，$u_2$ 开始 \\
-\ForEach{$u_j \in V_Q \setminus V_{q^2}$}{ \label{code:init-lcs:begin}
-根据定义 \ref{def:local-candidate-set} 初始化 $C_{g^2}(u_j)$ \label{code:init-lcs:end}
-}
-FindDenseMatches-Both$(G_t, Q, \Phi, g^2, A_t^k, k)$ \label{local:code:baseline:end} \
-/* 见算法 \ref{alg:find-dense-matches-formal} 获取详细过程 */
-}
-}
-\If{$op = -$}{
-执行与算法 \ref{alg:baseline:framework} 中第 \ref{code:base-del:begin}-\ref{code:base-del:end} 行对称的操作
-}
-}
-\end{algorithm}
+
 
 一共有 $|E_Q|$ 个匹配顺序，每个数据顶点 $v_i$ 在某一匹配顺序下有 $|V_Q|$ 个密度（即每个 $u_j$ 的 $den(Qstar(j, v_i))$）。因此，空间复杂度显然是 $O(|E_Q|*|V_{G_t}|*|V_Q|)$，这是与数据图的顶点数量成线性关系的。
 实际上，局部 MWstar 的维护也是高效的。考虑一个更新 $o_t = (op, v_1, v_2)$，其中 $(v_1, v_2)$ 匹配 $(u_{i_1}, u_{i_2})$。
@@ -439,60 +493,6 @@ FindDenseMatches-Both$(G_t, Q, \Phi, g^2, A_t^k, k)$ \label{local:code:baseline:
 
 如果 $o_t$ 是删除操作，即 $op = -$，对于每个匹配顺序 $\Phi$，如果 $u_{i_1} \in LN(u_{i_2})$（对称情况的讨论省略），我们可以在 $O(d_t)$ 时间内更新 $den(Qstar(i_2), v_2)$。
 因此，删除操作的时间复杂度是 $O(|E_Q| * d_t)$，几乎是常数时间。
-
-\begin{algorithm}[h!]
-\small
-\caption{利用 $lBound$ 进行递归搜索}
-\label{alg:find-dense-matches-formal}
-\SetKwBlock{iFunc}{Procedure}{End Procedure}
-\iFunc(FindDenseMatches-Both{(}$G_t, Q, \Phi, g^i, A, k${)})
-{
-令 $g_{min}$ 为 $A$ 中密度最小的匹配 \\
-\If{$|g^i|=|V_Q|$}{
-\If{$|A|<k \lor den(g_{min}) < den(g^i)$ } {
-将 $g^i$ 添加到 $A$ 中 。\\
-如果 $|A|>k$，则从 $A$ 中移除 $g_{min}$\
-\Return
-}
-}
-初始化 $lBound(g^i)$ 为 $den(g^i)$\
-\ForEach{$u_{j} \in V_Q \setminus V_{q^i}$}{ \label{code:lcs-empty:begin}
-\If{$C_{g^i}(u_j) = \emptyset$}{
-\Return   \label{code:lcs-empty:end}
-}
-\If{$C_{g^i}(u_j)$ 未定义}{
-/* 来自全局 MWstar 的密度 */ \\
-$lBound(g^i) += den(Qstar(j))$
-}
-\Else{
-				/* 来自局部 MWstar 的密度 */  \\
-$lBound(g^i) += den(Qstar(j), C_{g^i}(u_j))$
-}
-
-}
-
-\If{$|A|=k \land lBound(g^i) \leq den(g_{min})$}{ \label{code:B-formal:begin}
-    \Return \label{code:B-formal:end}
-}
-\ForEach{$v_{i+1} \in C_{g^i}(u_{i+1})$}{ \label{code:formal-extension:begin}
-将 $v_{i+1}$ 标记为已访问，并令 $g^{i+1} = g^i \cup {v_{i+1}}$ \\
-\ForEach{$u_{j} \in RN(u_{i+1})$}{ \label{code:formal-each-rn:begin}
-\If{$C_{g^{i}}(u_{j})$ 未定义}{
-    $C_{g^{i+1}}(u_{j}) = N_{G_t}^{L(u_{j})}(v_{i+1})$ 
-}
-\Else{
-    $C_{g^{i+1}}(u_{j}) = C_{g^{i}}(u_{j}) \cap N_{G_t}^{L(u_{j})}(v_{i+1})$ \label{code:formal-each-rn:end}
-}
-$C_{g^{i}}(u_{j}) =$ $(C_{g^{i}}(u_{j})).filterVisited()$
-}  
-FindDenseMatches-Both{(}$G_t, Q, \Phi, g^{i+1}, A, k${)} \\ 
-将 $v_{i+1}$ 标记为未访问 \label{code:formal-extension:end}  \\
-}
-
-\Return 
-
-}
-\end{algorithm}
 
 \section{图压缩技术}
 \label{mwstar:compact-graph}

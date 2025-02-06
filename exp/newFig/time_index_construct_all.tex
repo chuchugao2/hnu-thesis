@@ -7,6 +7,7 @@
 \usetikzlibrary{patterns}
 \usetikzlibrary{shapes}
 \usetikzlibrary{arrows}
+\usepackage{ctex}
 %minimum size=10pt, inner sep=0pt
 
 \begin{document}
@@ -28,7 +29,7 @@
 	bar width = 15pt,
 %    ymajorgrids = true,
     grid style=dashed,
-    ylabel = {Time(us)},
+    ylabel = {平均时间(us)},
     scaled x ticks = false,
 %    /pgf/number format/1000 sep={},
 %    xlabel = {VEND solution},
@@ -52,7 +53,7 @@
     x label style = {at={(axis description cs:0.5,-0.05)},font=\ptfont{\labelfont}},
     y label style = {inner sep=0pt,at={(axis description cs:-0.05,0.5)},font=\ptfont{\labelfont}},
     %legend style={at={(0.65, 0.99)}, draw=none, fill=none, anchor = north, legend columns = 2,row sep=-2pt, inner sep = 0pt, font=\ptfont{9pt}}
-    legend style={at={(0.4, 0.97), font=\ptfont{19pt}}, fill=none,draw=none,legend columns = 3},
+    legend style={at={(0.45, 0.97), font=\ptfont{19pt}}, fill=none,draw=none,legend columns = 3},
     % extra y ticks={2300000000},
     % extra y tick labels={\normalsize INF}
 ]
