@@ -124,7 +124,7 @@
 在线处理部分，对于每个更新操作$o_t$，我们首先在 $G_{t-1}$ 上应用 $o_t$ 形成 $G_t$，并将 $A_t^k$ 初始化为 $A_{t-1}^k$：
 \begin{itemize}
     \item \textbf{边插入操作}（$op=+$）: 如果 $o_t$ 是插入一条边 $(v_1, v_2)$，该边匹配查询边 $(u_1, u_2)$（算法 \ref{alg:baseline:framework} 中的第 \ref{code:base-ins:begin} 行至第 \ref{code:base-ins:end} 行），我们会以递归的方式扩展部分匹配 $g^2 = \{v_1, v_2\}$，生成高密度的完整匹配，匹配顺序从 $u_1$ 和 $u_2$ 开始。
-    我们将在\ref{sec:wegiht-prune-baseline}章中讨论此递归搜索方法（即算法 \ref{alg:find-dense-matches} 中的函数 \emph{FindDenseMatches}）。
+    我们将在\ref{ch3:wegiht-prune-baseline}节中讨论此递归搜索方法（即算法 \ref{alg:find-dense-matches} 中的函数 \emph{FindDenseMatches}）。
     \item \textbf{边删除操作}（$op=-$）:  如果 $o_t$ 是删除一条边 $(v_1, v_2)$（算法 \ref{alg:baseline:framework} 中的第 \ref{code:base-del:begin} 行至第 \ref{code:base-del:end} 行），
     我们会删除所有包含 $(v_1, v_2)$ 的过期的top $k$ 个答案。如果有 $k^\prime$ 个过期的匹配，我们需要在 $G_t$ 中计算另外 $k^\prime$ 个密集的匹配，以补充答案集合，形成 $A_{t}^k$。
     具体来说，我们会遍历 $E_{G_t}$ 和 $E_Q$，对于每个匹配关系，其中数据边 $(v_{i_1}, v_{i_2})$ 匹配查询边 $(u_1, u_2)$，我们会对 $g^2 = \{v_{i_1}, v_{i_2}\}$ 进行子图搜索，匹配顺序从 $u_1$ 和 $u_2$ 开始。

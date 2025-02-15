@@ -1,63 +1,79 @@
 \chapter{绪论}
 \section{研究背景与意义}
-随着互联网的飞速发展，包括社交网络分析、生物信息学、网络安全，交通规划等。
-其催生了丰富多样的实时应用，而这些实时应用生成的海量复杂数据精准描绘了现实对象和对象之间的关联关系，这些信息将有助于人们获得重要的决策指导信息。
-%例如通过分析第三方支付平台中的账户对象及其之间的交易行为，以挖掘欺诈模式的诈骗团伙；通过监控网络设备中的通信流量数据，有助于尽早发现恶意的攻击模式。
+随着互联网的飞速发展，包括社交网络分析、生物信息学、网络安全，交通规划等，其催生了丰富多样的实时应用，而这些实时应用生成的海量且复杂的数据，精准地描绘了现实世界中对象和对象之间的关联关系。
+这些信息将有助于人们获得重要的决策指导信息。
+这些关系数据不仅有助于描述复杂系统的结构，还能为决策过程提供重要的指导信息。
+%以金融领域为例，分析第三方支付平台中的账户对象及其交易行为，可有效挖掘潜在的欺诈模式；在网络安全领域，监控设备通信流量的数据有助于及时识别并预防恶意攻击。
 
-连续子图匹配（Continuous Subgraph Matching，简称 CSM）问题是动态图分析中的一个重要研究方向，属于动态子图匹配问题的一个变种。
-在动态图中，随着时间的推移，节点和边会不断发生增减变化，这种场景在许多现实世界的应用中十分常见。
-动态图能够有效建模这些数据之间的关联关系，并进行动态更新；而子图则用于精确描述特定对象及其间的关系。
-在这样的背景下，给定一个子图模式，连续子图匹配能够实时维护子图的匹配结果，有助于及时获取关键信息。
-因此，针对动态图的连续子图匹配问题具有广泛的应用前景，是一项重要的研究工作。
+
+在动态数据的分析中，连续子图匹配（Continuous Subgraph Matching，简称CSM）问题作为一个重要的研究方向，旨在动态图数据中实时地识别与给定子图模式相匹配的子图。
+与传统的静态子图匹配问题不同，CSM要求在图数据随着时间的推移持续更新的情况下，能够快速且高效地完成子图匹配。
+这种动态变化的场景在许多现实世界应用中具有广泛的适用性。
+例如，在金融欺诈的检测中，我们关注的是匹配某一特定模式的最大规模欺诈团伙；在网络安全监控中，重点关注定位最具破坏性且恶意的攻击模式。
+因此，如何实现高效的动态图子图匹配，特别是连续子图匹配，成为了一个亟待解决的重要问题。
 
 随着数据规模的不断增长，尤其是近年来5G时代的到来，数据量、种类和形式呈爆炸式增长。例如，截至2024年11月13日，微信及其旗下的WeChat月活跃账户数已达到13.82亿，同比增长3\%，几乎覆盖了中国的所有人口；与此同时，随着网络电商的快速发展，“双十一”购物节的全网交易额已突破14418亿元。这些现象凸显了互联网5G时代大规模数据的特征，数据量的激增已成为数字化时代的显著特点。
 
 在庞大的图数据规模下，符合某一特定子图模式的子图匹配结果往往极为庞大，但是往往我们更关注某几个特定的匹配子图。例如，在金融欺诈模式的挖掘中~\cite{csm-cycle-DBLP:journals/pvldb/QiuCQPZLZ18}，我们关注的是交易金额流通总量最大的欺诈组织；在网络安全领域，网络管理员更倾向于定位到特定的恶意攻击模式~\cite{traffic-graph-matching-DBLP:journals/pvldb/SongGCW14}，并找到受影响最严重的子网络。
 因此，针对动态图数据引入边权属性，设定密度限制并结合拓扑结构进行子图搜索显得尤为重要。这种方法不仅能够确保匹配结果符合拓扑结构，还能优先返回密度较高的子图集合，从而帮助分析人员更加精准地定位问题。
 
-然而，目前已有的Top-k密度约束的子图匹配问题主要聚焦在静态图~\cite{density-define-DBLP:journals/vldb/AngelKSSST14,dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12}，这种方法构建大量的离线索引来提供权重的上界，然而其索引构建所需要的时间和空间受到了查询图中的标签大小以及数量的影响，不适用于动态场景。而现有动态图的工作只聚焦于所有子图匹配结果的返回，在结果数量过大的情况下，也只能随机限定返回数量的上限，缺乏对返回结果的其他条件约束~\cite{csm-sjtree-DBLP:conf/edbt/ChoudhuryHCAF15,csm-IncIsoMatch-DBLP:conf/sigmod/FanLLTWW11,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18,csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21,csm-symbi-DBLP:journals/pvldb/MinPPGIH21,csm-rapidflow-DBLP:journals/pvldb/SunSHL22}。
+然而，目前的研究大多集中在静态图中的Top-k密度约束子图匹配问题~\cite{density-define-DBLP:journals/vldb/AngelKSSST14,dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12}，这种方法构建大量的离线索引来提供权重的上界，然而其索引构建所需要的时间和空间受到了查询图中的标签大小以及数量的影响，其高昂的索引构建开销使得这些方法在动态图中不具有普遍适用性。
+此外，现有动态图的工作只聚焦于所有子图匹配结果的返回，在结果数量过大的情况下，也只能随机限定返回数量的上限，缺乏对返回结果的其他条件约束~\cite{csm-sjtree-DBLP:conf/edbt/ChoudhuryHCAF15,csm-IncIsoMatch-DBLP:conf/sigmod/FanLLTWW11,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18,csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21,csm-symbi-DBLP:journals/pvldb/MinPPGIH21,csm-rapidflow-DBLP:journals/pvldb/SunSHL22}。
 
-因此，结合密度约束和拓扑结构的连续子图匹配问题在动态图场景中具有重要意义。
+因此，结合密度约束和拓扑结构的连续子图匹配问题在动态图场景中具有重要的应用价值。
 通过密度优先排序返回前k个匹配子图，能够帮助数据分析人员快速识别最具代表性和决策性的结果，进而为各种应用领域的决策提供支持。
-基于此，本文将重点研究如何在连续子图匹配过程中实现密度剪枝，以提升算法的效率和准确性。
+基于上述背景，本文旨在深入研究如何在连续子图匹配中引入密度剪枝机制，提升算法的效率与准确性，从而更好地应对现实应用中动态图的子图匹配挑战。
 \section{国内外研究现状}
-连续子图匹配（Continuous Subgraph Matching,CSM）是图数据管理领域的一个重要的研究方向，旨在动态图环境中高效的检测与查询图相匹配的子图。而与本课题密度约束动态图上的连续子图匹配相关的工作有三类，包括现有连续子图匹配问题，Top-k密集子图挖掘问题，以及静态Top-k子图匹配。然而这三种相关的工作都无法高效的解决本课题，以下内容将针对这三类已有的工作分别阐释。
+连续子图匹配（Continuous Subgraph Matching,CSM）是图数据管理领域的一个重要的研究方向，旨在动态图环境中高效地检测与查询图相匹配的子图。而与本课题密度约束动态图上的连续子图匹配相关的工作有三类，包括现有连续子图匹配问题，Top-k密集子图挖掘问题，以及静态Top-k子图匹配的搜索过程。
+然而，现有的研究方法普遍存在某些局限性，无法完全满足动态图场景下高效匹配的需求。以下将分别讨论这三类研究的主要进展及其局限性。
 \subsection{现有的连续子图匹配方案}
 在现有的关于连续子图匹配（CSM）的工作\cite{csm-sjtree-DBLP:conf/edbt/ChoudhuryHCAF15,csm-IncIsoMatch-DBLP:conf/sigmod/FanLLTWW11,csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17,csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18,csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21,csm-symbi-DBLP:journals/pvldb/MinPPGIH21,csm-rapidflow-DBLP:journals/pvldb/SunSHL22}中，根据是否依赖辅助数据结构和索引，相关方法可以分为两类。
 
 （1） 不依赖任何辅助数据结构或索引的方法。
 
-爱丁堡大学的樊文飞教授提出了InslsoMatch\cite{csm-IncIsoMatch-DBLP:conf/sigmod/FanLLTWW11}方法，该方法通过提取局部更新范围的子图，并在搜索过程中调用静态子图匹配算法。尽管该方法在某些情况有效，但存在一个明显的缺点：静态算法单次调用的查询延迟很高，因为它通常需要对整个图构建复杂索引或者进行全图遍历，从而使得查询复杂度高。
-另一方面，加拿大滑铁卢大学的Semih团队提出了GraphFlow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17},利用Worst-Case Optiomal Join来优化搜索的过程，显著减少了搜索空间。该团队随后提出了GraphFlow+\cite{csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21}，该方法通过缓存GraphFlow的部分联接结果以加速后续的搜索。
+爱丁堡大学的樊文飞教授提出了InslsoMatch\cite{csm-IncIsoMatch-DBLP:conf/sigmod/FanLLTWW11}方法，该方法通过提取局部更新范围的子图，并在搜索过程中调用静态子图匹配算法。
+然而，静态算法的查询延迟较高，因为其通常需要构建复杂的索引或遍历整个图，导致查询效率低下。
+加拿大滑铁卢大学的Semih团队提出了GraphFlow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17},利用Worst-Case Optiomal Join来优化搜索的过程，显著减少了搜索空间。
+该团队随后提出了GraphFlow+\cite{csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21}，该方法通过缓存GraphFlow的部分联接结果以加速后续的搜索。
 这些方法不维护任何的中间结果，并保留了完整的子图匹配结果集。
 
 （2） 基于辅助数据结构和索引的方法
 
-另外一些方研究则利用辅助数据结构如生成树、有向无环图（DAG）等结构来加速子图匹配的过程。例如韩国的Kyoungmin提出TurboFlux\cite{csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18}，这是一种基于生成树的索引方法，旨在通过在查询图生成的生成树的基础之上，在数据图上构建相应的辅助索引，从而提高匹配效率。
-TurboFlux 的核心优势在于其增量更新能力，能够快速定位受影响的区域，避免全图重新计算，适用于连续子图匹配。
-韩国科学技术院的 Wook-Shin Han 教授团队提出Symbi\cite{csm-symbi-DBLP:journals/pvldb/MinPPGIH21}，该方法将查询图转化为有向无环图，并充分利用了对于非树边的剪枝能力，以在搜索的过程中实现显著的加速。
-另一种方法——RapidFlow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22},采用一种全局索引策略，基于查询图拓扑结构构建全局索引，并利用全局索引快速生成局部索引，从而极大地较少子图匹配的计算开销。
 
-最近，国内复旦大学郑卫国教授团队提出了具有成本效益的索引方法CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}，旨在减少回溯的搜索空间。
+除了直接依赖增量计算的匹配方法外，另外一些研究则利用辅助数据结构（如生成树、有向无环图（DAG））来加速子图匹配的过程，以减少计算开销并提高查询效率。
+例如韩国的Kyoungmin提出TurboFlux\cite{csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18}，这是一种基于生成树索引的连续子图匹配方法，旨在通过在查询图的生成树的基础之上，在数据图上构建相应的辅助索引，从而提高匹配效率。
+TurboFlux 的核心优势在于其增量更新能力，能够快速定位受影响的区域，避免全图重新计算，从而降低计算成本，使其在动态图环境下具有良好的适应性。
+此外，韩国科学技术院的 Wook-Shin Han 教授团队提出Symbi\cite{csm-symbi-DBLP:journals/pvldb/MinPPGIH21}，该方法将查询图转化为有向无环图，并充分利用了对于非树边的剪枝能力，以在搜索的过程中实现显著的加速。
+另一项值得关注的研究是RapidFlow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22}，其采用一种全局索引策略，基于查询图拓扑结构构建全局索引，并在查询过程中利用全局索引快速生成局部索引，从而极大地较少子图匹配的计算开销。
+此外，复旦大学郑卫国教授团队提出了具有成本效益的索引方法CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}，旨在减少回溯的搜索空间。
 CaLiG 通过构建高效的索引结构，能够在匹配过程中快速剪枝，从而更高效地完成匹配任务。该方法在处理具有复杂拓扑结构的查询图时表现出较好的性能。
 
-此外，国内的一些其他团队也在连续子图匹配领域作出了重要的贡献，如北京大学的高军教授团队邹磊教授团队、北京航天航空大学的马帅教授团队等，都在该领域开展了深入研究，提出了多种优化策略。
-尽管上述这些成熟的连续子图匹配方法在提高匹配效率方面取得了显著进展，但它们普遍存在一个共同点：大多数方法仅对搜索过程中的中间结果进行剪枝，而对最终结果集的个数并未做限制。因此，在实际应用中，可能面临将所有子图匹配结果根据密度优先级重新排序的挑战，并筛选出前k个最优匹配结果。此过程往往会浪费大量时间，尤其是在匹配结果集非常庞大的情况下，常常只能返回匹配的总数，或者随机返回最多k个结果，而无法精确获取最优的k个匹配结果。
+国内的其他团队也在连续子图匹配领域作出了重要的贡献。例如北京大学的高军教授团队、邹磊教授团队、北京航天航空大学的马帅教授团队等，都在该领域开展了深入研究，并提出了多种优化策略。
+尽管上述这些成熟的连续子图匹配方法在提高匹配效率方面取得了显著进展，但它们普遍存在一个共同局限性：大多数方法仅专注于搜索过程中的剪枝优化，而未对最终匹配结果的数量进行有效控制。
+因此，在实际应用中，当查询图较简单时，匹配结果可能会极为庞大，导致后续排序筛选成本过高。在大规模数据场景下，这种方法的局限性尤为突出，往往只能返回匹配的总数或随机选取部分结果，而难以直接获得最优的前 $k$ 个匹配子图。
 \subsection{现有的Top-k密集子图挖掘问题}
-在现有的Top k密集子图发现（Top K Dense Subgraph Mining）工作中~\cite{dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12,dsm-noweight-Balalau-DBLP:conf/wsdm/BalalauBCGS15,dsm-noweight-Bonchi-DBLP:journals/corr/abs-2007-01533,dsm-noweight-Dondi-DBLP:journals/corr/abs-2002-07695,dsm-noweight-Fang-DBLP:journals/pvldb/FangYCLL19,dsm-noweight-Gabert-DBLP:conf/wsdm/GabertPC21,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,dsm-noweight-Ma-DBLP:journals/pvldb/MaCLH22,dsm-noweight-Mathieu-DBLP:journals/corr/abs-2010-07794,dsm-noweight-McGregor-DBLP:journals/corr/McGregorTVV15,dsm-noweight-Rozenshtein-DBLP:journals/tkdd/RozenshteinTG17,dsm-noweight-Saha-DBLP:journals/corr/abs-2212-08820,dsm-noweight-Tsourakakis-DBLP:conf/kdd/TsourakakisBGGT13,dsm-noweight-Valari-DBLP:conf/ssdbm/ValariKP12,dsm-noweight-Zhao-DBLP:conf/icalip/ZhaoQYB14,dsm-weight-Angel-DBLP:journals/vldb/AngelKSSST14,dsm-weight-Ma-DBLP:conf/icde/MaHWLH17,dsm-weight-Muhammad-DBLP:conf/cikm/NasirGMG17},
-无论是动态还是静态场景，其研究方法根据密度的定义分为两类：基于节点度数定义密度；基于边权重定义密度。
+在现有的Top-k密集子图挖掘（Top K Dense Subgraph Mining）研究中，密度的定义通常根据图中节点的度数或边权值进行区分~\cite{dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12,dsm-noweight-Balalau-DBLP:conf/wsdm/BalalauBCGS15,dsm-noweight-Bonchi-DBLP:journals/corr/abs-2007-01533,dsm-noweight-Dondi-DBLP:journals/corr/abs-2002-07695,dsm-noweight-Fang-DBLP:journals/pvldb/FangYCLL19,dsm-noweight-Gabert-DBLP:conf/wsdm/GabertPC21,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,dsm-noweight-Ma-DBLP:journals/pvldb/MaCLH22,dsm-noweight-Mathieu-DBLP:journals/corr/abs-2010-07794,dsm-noweight-McGregor-DBLP:journals/corr/McGregorTVV15,dsm-noweight-Rozenshtein-DBLP:journals/tkdd/RozenshteinTG17,dsm-noweight-Saha-DBLP:journals/corr/abs-2212-08820,dsm-noweight-Tsourakakis-DBLP:conf/kdd/TsourakakisBGGT13,dsm-noweight-Valari-DBLP:conf/ssdbm/ValariKP12,dsm-noweight-Zhao-DBLP:conf/icalip/ZhaoQYB14,dsm-weight-Angel-DBLP:journals/vldb/AngelKSSST14,dsm-weight-Ma-DBLP:conf/icde/MaHWLH17,dsm-weight-Muhammad-DBLP:conf/cikm/NasirGMG17},
 
-大多数的密集子图发现问题中密度的定义都与节点的度数有关。例如Garbert等人\cite{dsm-noweight-Gabert-DBLP:conf/wsdm/GabertPC21}提出了全动态的核算法，该算法支持小团枚举和k-core维护，并将问题分解为维护特殊的超图以及k-core，该算法的改进同样适用于trusses（高密度子图）。Bahmani等人\cite{dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12}提出了基于Mapreduce框架的图数据流中的Top-k最密集子图发现问题。在MapReduce模型\cite{csm-mapreduce-DBLP:journals/cacm/DeanG08}下，该方法能够高效地进行并行化处理，在处理大规模数据时有显著优势。
-此外，Valari等人\cite{dsm-noweight-Valari-DBLP:conf/ssdbm/ValariKP12}针对动态大图中的Top k密集子图问题，提出了精确和近似算法的研究，精确算法基于密度的上下限来减少了精确密度计算的次数，而近似算法通过在计算速度和结果准确性之间进行权衡来加速搜索。
-这些方法方法在动态场景下表现尤为突出，能够实现在实时更新图数据时持续提供有效的Top-k密集子图。
+无论是动态还是静态场景，这些方法的核心问题是如何定义和计算图中“密度”，并依此寻找图中的最密集子图。具体来说，这些密集子图挖掘问题可以分为两类：一类是基于节点度数定义的密度，另一类是基于边权值定义的密度。
 
-另外，有些方法关注于基于边权值定义密度。Muhammad\cite{dsm-weight-Muhammad-DBLP:conf/cikm/NasirGMG17}等人研究了在滑动窗口模型下的Top k最密子图算法，该算法返回的结果是边权值和较大的前k个子图，且子图之间不存在相交关系。与传统的Top k最密子图方法不同，该模型只更新影响图的有限区域，而不是对于整个图进行重新计算。
+\subsubsection{基于节点度数的密度定义}
+大多数的密集子图发现问题中密度的定义都与节点的度数有关。例如Garbert等人\cite{dsm-noweight-Gabert-DBLP:conf/wsdm/GabertPC21}提出了全动态的核算法，该算法支持小团枚举和k-core维护，并将问题分解为维护特殊的超图以及k-core，该算法的改进同样适用于trusses（高密度子图）。
+Bahmani等人\cite{dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12}提出了基于Mapreduce框架的图数据流中的Top-k最密集子图发现问题。在MapReduce模型\cite{csm-mapreduce-DBLP:journals/cacm/DeanG08}下，该方法能够高效地进行并行化处理，在处理大规模数据时有显著优势。
+此外，Valari等人\cite{dsm-noweight-Valari-DBLP:conf/ssdbm/ValariKP12}针对动态大图中的Top-k密集子图问题，提出了精确和近似算法的研究，精确算法基于密度的上下限来减少了精确密度计算的次数，而近似算法通过在计算速度和结果准确性之间进行权衡来加速搜索。
+这些方法在动态场景下表现尤为突出，能够实现在实时更新图数据时持续提供有效的Top-k密集子图。
+
+\subsubsection{基于边权重的密度定义}
+另一类研究则关注于基于边权值的密度定义。
+例如，Muhammad\cite{dsm-weight-Muhammad-DBLP:conf/cikm/NasirGMG17}等人研究了在滑动窗口模型下的Top-k最密子图算法，该算法返回的结果是边权值和较大的前k个子图，且子图之间不存在相交关系。
+与传统的Top-k最密子图方法不同，该模型只更新影响图的有限区域，而不是对于整个图进行重新计算。
 Albert等人\cite{dsm-weight-Angel-DBLP:journals/vldb/AngelKSSST14}研究了在边权值实时更新下维护密集子图的算法，在该方法中是根据给定的密度阈值划分密集子图，随着边权重的实时更新，子图的密度会随之变化，导致子图状态发生变化，该算法提出了关于单个边权重更新所引起的密度变化幅度的理论分析。
 
-尽管这些方法在发现符合密度阈值的Top k密集子图方面取得了一定的成果，但它们通常未对子图的结构进行约束。这意味着，尽管子图满足密度阈值，但在结构上可能表现出较大的异质性，从而使得这些方法在连续子图匹配（CSM-TopK）问题中的应用变得困难。对于CSM-Topk问题，除了考虑子图的密度外，还需要对子图的结构进行约束，以便确保结果不仅在密度上满足要求，还在拓扑结构上具有一致性。
-因此，现有的Top k密集子图发现方法，尤其是那些基于节点度数或边权重的密度定义，通常无法直接应用于CSM-Topk问题，亟需在密集子图的结构约束方面进行进一步研究。
+尽管这些方法在密度阈值下的Top-k密集子图挖掘中取得了显著进展，但它们通常未对子图的结构进行约束。
+这意味着，尽管子图满足密度阈值，但在结构上可能表现出较大的异质性，从而使得这些方法在连续子图匹配（CSM-TopK）问题中的应用变得困难。
+对于CSM-TopK问题，除了考虑子图的密度外，还需要对子图的结构进行约束，以确保结果不仅在密度上满足要求，还在拓扑结构上具有一致性。
+因此，现有的Top-k密集子图发现方法，尤其是那些基于节点度数或边权重的密度定义，通常无法直接应用于CSM-TopK问题，亟需在密集子图的结构约束方面进行进一步研究。
 
-综上所述，尽管现有的Top-k密集子图发现方法在密度计算和图数据处理方面取得了诸多进展，但它们主要集中于密度的定义和计算，且对于子图结构的考虑不足。在面临需要精确结构匹配的应用场景（如CSM-Topk问题）时，这些方法可能无法满足实际需求，因此在今后的研究中，需要结合密度和拓扑结构约束，提出更加适应特定应用的Top k密集子图发现方法。
+综上所述，尽管现有的Top-k密集子图发现方法在密度计算和图数据处理方面取得了诸多进展，但它们主要集中于密度的定义和计算，且对于子图结构的考虑不足。在面临需要精确结构匹配的应用场景（如CSM-Topk问题）时，这些方法可能无法满足实际需求，因此在今后的研究中，需要结合密度和拓扑结构约束，提出更加适应特定应用的Top-k密集子图挖掘方法。
 
 %无论密度的定义是否相同，其密集子图发现问题主要聚焦于发现符合密度阈值的最密子图，但对于子图的结构没有进行任何约束，因此最终得到的密集子图在结构上各不相同，很难将这些方法应用于CSM-Topk。
 \subsection{静态Top k密度优先级机制的子图匹配}
@@ -65,35 +81,41 @@ Gupta\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}是首个提出将密度
 在该方法中，Gupta\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}通过构建两种索引来减少子图匹配的搜索空间，从而加速前k个有趣子图的发现：图拓扑结构索引和最大元路径索引。
 
 具体来说，图拓扑结构索引通过为数据图中的每个节点存储沿特定元路径的所有d跳邻居的数量（其中$d \in \{1,\dots,D\}$）来捕捉节点之间的拓扑关系。
-最大元路径索引则记录每个节点在d跳特定元路径下的权值和的最大值，其中元路径是由路径中的节点标签组合而成。假设B是节点的平均邻居数，元路径的最大跳数为D，则该索引的时间复杂度为O(BD)。因此，索引构建的时间复杂度为$O(|V_G|BD)$，空间复杂度为$O(|V_G|TD)$，其中T是节点标签的数量。由于时间和空间复杂度都呈指数增长，这使得索引构建的成本极高。
-当d的值增大时，索引构建的代价也会显著增加，因此，Gupta提出的索引结构并不适用于动态场景。
+最大元路径索引则记录每个节点在d跳特定元路径下的权值和的最大值，其中元路径是由路径中的节点标签组合而成。假设B是节点的平均邻居数，元路径的最大跳数为D，则该索引的时间复杂度为O(BD)。因此，索引构建的时间复杂度为$O(|V_G|BD)$，空间复杂度为$O(|V_G|TD)$，其中T是节点标签的数量。
+由于时间和空间复杂度都呈指数增长，这使得索引构建的成本极高。
+
+然而，这种方法的主要局限性在于，随着$d$的增大，索引构建的代价会显著增加，导致其在动态场景下的应用变得困难。尤其是在需要实时更新图数据的情况下，Gupta提出的索引结构在计算和存储上都存在指数级的增长，限制了其在动态图中的适用性。
+%当d的值增大时，索引构建的代价也会显著增加，因此，Gupta提出的索引结构并不适用于动态场景。
 
 %最大元路径索引记录的是数据图中的每个节点在d跳特定元路径的权值和的最大值，元路径来自于路径中的节点标签组合。如果B是节点的邻居平均数量，则元路径的最大跳数为D, 则其时间复杂度达到O(BD). 因此，其索引构建的时间复杂度为O(|VG|BD),空间复杂度为O(|VG|TD)，T是节点标签的数量。 其时间和空间复杂度都达到了指数级别，这使得索引的构建成本过高。若是d的取值越大，其索引构建的代价就越昂贵，因此Gupta提出的索引结构并不适用于动态的场景下。
 
-在此基础上，Chen\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}等人对Gupta的工作进行了优化，提出了通过压缩数据图来减少枚举的范围，同时通过基于一阶邻居筛选候选节点的过程来降低图拓扑索引的成本。在搜索阶段，Chen\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}等人选择从候选节点数最少的节点作为起始顶点，进行双向深度优先搜索。然而，这种方法仅适用于特定结构的查询图——路径，从而限制了其适用性。此外，压缩数据图的策略并不适用于动态图场景，且仍然保留了Gupta提出的最大元路径索引结构，因此其时空复杂度仍然是指数级的。
+在此基础上，Chen\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}等人对Gupta的工作进行了优化，提出了通过压缩数据图来减少枚举的范围，同时通过基于一阶邻居筛选候选节点以降低图拓扑索引的成本。
+在搜索阶段，Chen\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}等人选择从候选节点数最少的节点作为起始顶点，进行双向深度优先搜索。
+然而，这种方法仅适用于特定结构的查询图——路径类型的图，从而限制了其适用性。
+此外，压缩数据图的策略并不适用于动态图场景，且仍然保留了Gupta提出的最大元路径索引结构，因此其时空复杂度仍然是指数级的。
 %在Gupta的基础上进行了优化，提出了对数据图进行压缩来减少枚举，同时利用基于一阶邻居来筛选候选节点过程来降低图拓扑索引的成本，在搜索阶段从候选顶点最少的点作为起始顶点进行双向深度优先搜索，但其此方法仅适用于特定结构的查询图—路径，限制了其适用性。而且压缩数据图的方式不能很好的应用于动态图的场景下，且仍然保留了Gupta的最大元路径的索引结构，其构建需要的时空复杂度仍然是指数级的。
 
-综上所述，虽然Gupta提出的密度与拓扑结构融合的定义与我们的问题定义相似，但其方法主要适用于静态图，并且无法有效应用于连续子图匹配（CSM）场景。由于其指数级的时间与空间复杂度，以及对特定索引结构的依赖，这些方法在动态图或复杂的查询图结构下，其索引结构的更新以及存储会受到极大的限制，因此无法将其应用于我们的课题。
+综上所述，虽然Gupta提出的密度与拓扑结构融合的定义与我们的问题定义相似，但其后续的研究工作都是针对静态图。
+由于其指数级的时间与空间复杂度，以及对特定索引结构的依赖，这些方法在动态图或复杂的查询图结构下，其索引结构的更新以及存储会受到极大的限制，因此无法将其有效的应用于我们的课题。
 \section{研究内容与贡献}
 现有的连续子图匹配（CSM）工作主要集中于返回所有子图匹配结果，但在结果集过大的情况下，往往只能随机返回数量上限的子图，且缺乏对结果优先级的排序和筛选机制。
-与此相关的经典问题是 Top k 密集子图发现问题，但该问题通常不涉及子图结构的约束。
-而现有的静态场景下，根据密度优先级排序的 Top-k 机制，虽然能通过大量离线索引构建来优化性能，但其索引构建的时空复杂度高，难以适应动态场景的需求。
+与此相关的经典问题是 Top-k 密集子图挖掘问题，但该问题通常不涉及对子图结构的约束。
+此外，现有的基于密度优先级排序的Top-k机制，虽然能通过大量离线索引构建来优化性能，但其索引构建的时空复杂度高，难以适应动态场景的需求。
 因此，在动态场景下进行按密度优先级排序的子图匹配，具有重要的现实意义。
 
-因此，本研究的核心目标是提出一种新的方法，解决动态场景下融合密度和拓扑结构约束的TopK连续子图匹配问题。
-具体来说，我们通过动态图模型中引入的边的权值来量化密度优先级排序，并在返回的结果中，除了需要同查询图形成结构上的匹配关系外，还需要满足按照密度优先级排序进入前k个子图（k为指定的参数）。具体的研究内容包括以下两个方面：
+因此，本研究的核心目标是提出一种新的方法，解决动态场景下融合密度和拓扑结构约束的Top-k连续子图匹配问题。
+具体而言，我们通过动态图模型中引入的边权值来量化密度优先级排序，并在返回的结果中，除了需要同查询图形成结构上的匹配关系外，还需要满足按照密度优先级排序进入前k个子图（k为指定的参数）。具体的研究内容包括以下两个方面：
 
 （1）插入更新下结合密度的增量查询搜索剪枝
 
-      首先插入更新需要考虑格外的约束来搜索剪枝。由于引入密度优先级机制和返回结果个数之后，搜索的目标范围更窄，若是使用原先的CSM的搜索策略，其效率不高。因此需要新的搜索策略，研究如何结合密度优先级先后以及结果数限定来剪枝是需要重点考虑的问题。
+      首先插入更新需要考虑格外的约束来搜索剪枝。由于引入密度优先级机制和返回结果个数之后，搜索的目标范围更窄。若是使用原先的CSM的搜索策略，其效率不高。因此需要新的搜索策略，研究如何结合密度优先级先后以及结果数限定来剪枝是需要重点考虑的问题。
 
 （2）删除更新下的Top-k密度子图补充策略
 
-      在删除更新发生后，维护的k个结果中可能存在包含被删除边的子图，这些子图会因为删除而失效，维护的结果可能存在不足k个的情况，需要重新从数据图中补足。但是补足结果集的挑战远高于插入操作。因为插入操作围绕的仅仅是增量部分的解，而补足操作面对的结果范围是全图。
-      因此，删除操作需要研究更为高效的补足策略。
-
-      因此，CSM-TopK 问题的核心在于设计一种基于密度的高效索引结构进行剪枝，以及针对删除操作设计有效的补充策略。基于上述研究内容，本文的贡献如下：
-
+   在删除更新发生时，维护的前k个结果可能会出现包含已删除边的子图，这些子图将因删除操作而失效，导致结果集的大小小于k。
+   在此情况下，需要重新从数据图中补充子图。然而，补充操作的挑战性远高于插入操作，因为插入操作仅关注增量部分，而补充操作需要考虑全图范围。
+   因此，设计高效的补充策略是删除操作中的关键问题。
+   综上所述，CSM-TopK问题的核心挑战在于设计一种基于密度的高效索引结构以进行剪枝，并针对删除操作设计有效的补充策略。基于上述研究内容，本研究的贡献包括：
 \begin{itemize}[label={\textbullet}]
     \item \textbf{CSM-TopK问题。}本研究首次提出了CSM-TopK问题，将 TopK密度约束纳入动态加权图上的连续子图匹配问题，并证明了该问题是NP难的。
     \item \textbf{轻量级索引结构(MWstar)。}本文提供了CSM-TopK 计算框架，并设计了两种轻量级索引结构，分别为全局MWstar和局部MWstar，用于加速CSM-TopK问题的计算。在边的动态插入/删除操作中，MWstar索引能够维持线性空间和常数的更新时间。
