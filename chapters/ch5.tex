@@ -3,6 +3,9 @@
 \chapter{实验设计与结果分析}
 \label{ch5:experiment}
 \section{实验设置}
+本章主要介绍了实验的设置与设计。首先我们介绍了实验的软硬件平台环境以及数据集来源和评价标准，
+其次，阐述了查询图的生成方法，具体包括从数据图中随机提取子图的方式及不同查询图大小的设置。
+接着，我们介绍了实验中使用的不同算法对比，包括本文所有提出的优化算法、多种现有的连续子图匹配算法以及两种静态的top-k算法。
 \subsection{实验环境}
 本节对我们提出的解决方案进行了评估。
 所有方法均采用C++实现，并在配置为64GB内存、Intel(R) 4210R CPU @ 2.40GHz的CentOS服务器上运行。
@@ -27,16 +30,17 @@
 
 \subsection{数据集和评价标准}
 \label{ss-sec:dataset}
-参考之前的CSM的研究工作~\cite{csm-survey:DBLP:journals/pvldb/SunSLH22,static-sm:DBLP:conf/sigmod/Sun020}，我们在实验中使用了五个数据集，具体数据集包括：
+在本实验中，我们参考了之前关于CSM（Subgraph Matching）的研究工作~\cite{csm-survey:DBLP:journals/pvldb/SunSLH22,static-sm:DBLP:conf/sigmod/Sun020}，并选择了五个广泛使用的真实数据集进行实验。
+这些数据集代表了不同领域的图数据，包括社交网络、电子商务、蛋白质相互作用网络等，能够涵盖多种不同的数据分布特征，并为评估算法的性能提供丰富的测试场景。具体数据集如下：
 \begin{itemize}
-\item Amazon 数据集：一个从亚马逊网站爬取的产品购买网络图。
-\item LiveJournal 数据集：包含一个社区网络数据图。
-\item Human 数据集：包含一个用于建模蛋白质相互作用网络的大型图。
-\item YouTube 数据集：包含一个视频分享网站的社交网络。
-\item Orkut 数据集：来自一个免费的在线社交网络，用户在其中互相建立友谊。
+\item Amazon 数据集：该数据集来源于亚马逊网站，包含了一个产品购买网络图，反映了用户之间的购买行为和偏好。
+\item LiveJournal 数据集：这是一个社交网络数据集，包含了来自LiveJournal平台的社区网络，具有较为复杂的社交结构。
+\item Human 数据集：该数据集包含了一个蛋白质相互作用网络图，广泛用于生物信息学研究，能够反映蛋白质之间的相互作用关系。
+\item YouTube 数据集：该数据集来源于YouTube平台，包含了用户之间的社交关系网络图，常用于社交网络分析。
+\item Orkut 数据集：这是一个免费的在线社交网络数据集，用户可以在其中互相建立友谊，并分享内容，数据集涵盖了广泛的社交互动数据。
 \end{itemize}   
 
-具体测试的数据集规模如表\ref{table:dataset}所示，表中列出了每个数据集的顶点数，边数，顶点标签数，边标签数，以及图的平均度。
+具体测试的数据集规模如表\ref{table:dataset}所示，表中列出了每个数据集的顶点数（$|V|$），边数（$|E|$），顶点标签数（$|L(V)|$），边标签数（$|L(E)|$），以及图的平均度（$degr(G)=\frac{2|E|}{|V|}$）。
 这些数据集的边最大可超过亿级，能够有效展示该算法在处理大规模数据图时的性能表现。通过实验，我们能够全面评估所提出的最终方案在不同规模的数据图中的时间和空间效率。
 
 \begin{table}[H]
@@ -61,32 +65,37 @@
 \[
     \frac{(N(v_1) \cap N(v_2)) + 1}{(N(v_1) \cup N(v_2)) + 1}
 \]
-
-
-结果保留六位小数。该方法生成的边权重反映了顶点邻域之间的连接程度。
+其中，$N(v_1)$ 和 $N(v_2)$ 分别表示顶点 $v_1$ 和 $v_2$ 的邻居节点集合，计算结果保留六位小数。
+这个方法通过衡量两个顶点的邻域交集与并集的比值，反映了它们之间的连接强度（+1是为了防止出现分母为0的情况）。
 对于上述数据集，我们通过从每个图中随机抽取 $10,000$ 条边来构建相应的更新流。
+这些更新流用于模拟实际应用中频繁的图更新操作。
+通过这些实验设置，我们能够全面评估所提出的算法在不同规模图数据上的表现，尤其是在大规模数据集中的时间和空间效率。
 
 
 \textbf{查询图生成}
 \label{ss-sec:querygen}
 
 与之前的研究~\cite{csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18,csm-symbi-DBLP:journals/pvldb/MinPPGIH21,csm-survey:DBLP:journals/pvldb/SunSLH22}类似，
-我们通过从数据图中随机提取子图来生成查询图。
-对于每个数据集，我们设置了六种不同的查询大小 ($|E_Q|$)：$6$、$8$、$10$、$12$和$14$。
+我们采用从数据图中随机提取子图的方式来生成查询图。
+具体地，对于每个数据集，我们设置了六种不同的查询大小 ($|E_Q|$)：$6$、$8$、$10$、$12$和$14$。
 对于每个查询大小，我们提取了10个查询图。
-随后，我们评估了不同的 $k$ 值：$100$、$300$、$500$、$700$和$900$。
-报告的时间和空间效率结果是通过对相应生成的查询图执行不同算法，并对得到的结果取平均值得到的。
+这些查询图的大小反映了实际应用中可能遇到的子图匹配问题规模。通过对这些查询图进行处理，我们能够评估不同规模查询图下算法的性能表现。对于每个查询图，
+我们分别评估了不同的 $k$ 值：$100$、$300$、$500$、$700$和$900$，表示连续子图匹配中需要维护的子图匹配数量。
+所有实验结果均通过对相应查询图应用不同算法，并计算结果的平均值来得出。
+这样，能够确保实验结果的代表性，并减少偶然因素对实验结果的影响。
+我们进一步分析了查询图的大小与算法时间、空间效率之间的关系，并通过这些实验深入评估了算法在实际应用中的表现。
 
 \textbf{对比方法}
-本节实验将对我们所提出的算法在上述真实数据集上进行评估，主要涉及以下算法：
+在本节实验中，我们将评估所提出的算法在上述真实数据集上的性能。为了全面评估我们的算法，我们将我们提出的几种优化算法进行横向对比，包括：
 
-（1） Baseline: 第\label{ch3:base-framework}小节中提出的CSM-TopK问题的基础计算框架，并实现利用第k个子图匹配结果作为剪枝上限的基线方案。
+（1） Baseline: 第\label{ch3:base-framework}小节中提出的CSM-TopK问题的基础计算框架，该框架利用第 $k$ 个子图匹配结果作为剪枝上限，提供了一种简单而有效的基线方案。
 
 （2）MWstar-global:第\ref{mwstar:global}小节中提出的基于全局MWstar索引的面向CSM-TopK问题的算法。
 
-（3）MWstar-both:第\ref{mwstar:local}小节中提出的同时基于全局MWstar和局部MWstar的索引，利用更紧凑的密度上限，解决CSM-TopK问题的算法。
+（3）MWstar-both:第\ref{mwstar:local}小节中提出的同时基于全局MWstar和局部MWstar的索引。该算法结合了全局和局部信息，利用更紧凑的密度上限来解决CSM-TopK问题。
 
 （4） Our-final: 第\label{mwstar:compact-graph}小结中提出的压缩图技术，将它与局部MWstar相结合，形成我们的最终解决方案，并且作为本章实验中的对比算法。
+
 
 我们将我们的最终方案Our-final（简称为Ours），与现有的具有TopK密度约束的静态子图匹配工作进行比较，包括 \itk\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14} 和 \pm\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}。
 此外，我们还将我们的最终方案与几种最先进的CSM方法进行了对比，包含 Graphflow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17}、Rapidflow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22} 和 CaLiG~\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}。
@@ -94,11 +103,15 @@
 
 \section{实验结果分析}
 \label{ch5:overall-compare}
+本章详细分析了我们提出的算法在不同实验设置下的性能表现。
+我们通过与现有的对比算法在多个维度上进行比较，展示了我们算法的优势。
+实验结果主要集中在以下几个方面：插入与删除效率、空间效率、索引构建时间，以及不同优化策略的对比。
 \subsection{插入与删除效率对比}
 \label{ch5:insertion-deletion}
-本节旨在通过实验评估我们提出的算法与现有对比算法在不同数据集下的插入与删除性能。
-在本实验中，我们通过固定参数$k$，测试查询图的大小在$6$，$8$，$10$，$12$时的插入和删除的平均时间，如图\ref{fig:time:insertion:fixQuerySize}和图\ref{fig:time:deletion:fixQuerySize}所示；
-同样，我们通过固定查询图的边数$|E(Q)|$，测试参数$k$的大小在$100$，$300$，$500$，$700$，$900$时的插入和删除的平均时间，如图\ref{fig:time:insertion:fixKSize}和图\ref{fig:time:deletion:fixKSize}所示。
+在这一节中，我们详细评估了所提出的算法与现有对比算法在插入与删除操作上的效率。
+实验通过不同的查询图大小和参数 $k$ 值，分析了各种算法在插入和删除操作中的表现。
+首先，我们通过固定参数$k$，测试查询图的大小在$6$，$8$，$10$，$12$时的插入和删除的平均时间，如图\ref{fig:time:insertion:fixQuerySize}和图\ref{fig:time:deletion:fixQuerySize}所示；
+其次，我们通过固定查询图的边数$|E(Q)|$，测试参数$k$的大小在$100$，$300$，$500$，$700$，$900$时的插入和删除的平均时间，如图\ref{fig:time:insertion:fixKSize}和图\ref{fig:time:deletion:fixKSize}所示。
 
 \input{\csmnewFig time_insertion_fixKsize}
 \input{\csmnewFig time_insertion_fixQuerySize}
@@ -108,33 +121,40 @@
 在实验中，我们通过改变 $k$ 值和查询图大小 $|E_Q|$ 来评估在不同数据集下的插入和删除的性能，其中横坐标表示实验中变化的参数，纵坐标表示算法的平均执行时间。
 
 
+
 如图~\ref{fig:time:insertion:fixQuerySize} 和图~\ref{fig:time:deletion:fixQuerySize}所示，随着查询图大小的增加，所有算法的平均执行时间均有所上升。
 这一趋势的产生可以归因于较大查询图的递归搜索深度通常高于较小查询图，从而增加了计算和存储的需求，导致算法的效率有所降低。
-与此同时，如图~\ref{fig:time:insertion:fixKSize} 和图~\ref{fig:time:deletion:fixKSize}所示，在$k$值增加时，其他已有的CSM的解决方法的平均执行时间几乎不受影响。
-这是因为这些算法均适用于连续子图匹配问题，并且未采用基于密度的剪枝策略，因此它们需要搜索所有新的匹配项以获取前$k$个匹配结果，并需要对所有子图匹配结果进行重排序。
-因此，无论$k$值增加的幅度有多大，算法始终维护所有的子图匹配结果，导致其执行时间不随着$k$值影响。
-特别地，在Orkut数据集上，Graphflow、RapidFlow和CaLiG的结果非常相似。
-而对于\itk 和 \pm，虽然这两种方法采用了基于密度的剪枝策略，但是由于它们的索引重建需要消耗大量时间，因此不同 $k$ 值之间的性能差异不大。
+在图~\ref{fig:time:insertion:fixQuerySize} 中，随着查询图大小 $|E_Q|$ 从 $6$ 增加到 $14$，执行时间总体呈现上升趋势。
+类似的，图~\ref{fig:time:deletion:fixQuerySize} 显示了删除操作的相同趋势。
+
+相比之下，图~\ref{fig:time:insertion:fixKSize} 和图~\ref{fig:time:deletion:fixKSize} 进一步展示了在 $k$ 值增加时，
+其他现有的CSM算法（如GraphFlow、RapidFlow和CaLiG）的平均执行时间几乎保持不变。
+这是因为这些算法基于连续子图匹配策略，并且没有采用基于密度的剪枝技术，因此它们在执行时需要遍历和排序所有的子图匹配结果，即使 $k$ 值增大，算法始终维护所有的子图匹配结果，导致其执行时间不随着$k$值影响。
+相比之下，如图~\ref{fig:time:insertion:fixKSize} 和图~\ref{fig:time:deletion:fixKSize}所示，在$k$值增加时，其他已有的CSM的解决方法的平均执行时间几乎不受影响。
+特别地，在Orkut数据集上，Graphflow、RapidFlow和CaLiG的结果非常相似，，表明它们在处理大规模数据集时遇到的瓶颈是相似的。
+而对于 \itk 和 \pm，尽管它们采用了基于密度的剪枝策略，但由于索引重建时需要消耗大量的时间，因此不同 $k$ 值之间的性能差异不大，整体表现较差。
+
+我们还观察到，在动态更新场景中，静态TopK方法（如 \itk 和 \pm）表现最差。
+由于这些方法的索引结构无法高效地进行动态更新，每次数据更新都需要重新构建索引，这在大规模数据图中会造成显著的性能下降。
+此外，这些方法的内存占用较高，导致在处理大数据集时可能会因为内存耗尽而无法继续执行。
 
 
-我们还观察到，两个静态TopK方法（\itk 和 \pm）在动态更新场景中表现最差，因为它们的索引结构难以动态更新，每次数据更新都需要重新构建索引，
-且其空间占用较高，导致在数据图较大时可能会因为内存空间耗尽而无法执行。
-
-
-总体而言，从图\ref{fig:time:insertion:fixKSize}-图\ref{fig:time:deletion:fixQuerySize}的实验结果表明，我们的算法在插入和删除方面始终优于其他对比算法。
-随着 $k$ 值的增加，我们的算法的执行时间虽然呈现轻微的上升趋势（见图~\ref{fig:time:insertion:fixKSize} 和图~\ref{fig:time:deletion:fixKSize}），但由于我们的算法比其他算法快2到4个数量级，这一上升趋势几乎可以忽略不计。
-更新时间的轻微增加主要是由于随着 $k$ 增大，最小密度下界 $den(g_{min})$ 的松弛（见算法~\ref{alg:find-dense-matches}中的第~\ref{code:g-min-filter}行），导致了基于密度的剪枝效果有所弱化。
+从总体结果来看，如图~\ref{fig:time:insertion:fixKSize} 和图~\ref{fig:time:deletion:fixKSize} 所示，尽管随着 $k$ 值的增加，执行时间略有增加，但我们的算法仍然优于其他对比算法，执行时间快了约 2 至 4 个数量级。
+算法执行时间的轻微上升，主要是由于随着 $k$ 增大，最小密度下界 $den(g_{min})$ 的松弛，导致基于密度的剪枝效果有所减弱。
+然而，这一影响对于最终的执行时间来说几乎可以忽略不计。
 
 
 \subsection{空间效率对比}
 \label{ch5:space}
 \input{\csmnewFig space_memory}
-我们进一步评估了不同算法的空间效率。
-图~\ref{fig:exp:space:memory}展示了不同算法在不同查询图大小下的内存使用情况。
+空间效率是另一个衡量算法性能的关键指标。我们进一步评估了不同算法在处理查询图时的内存使用情况。
+图~\ref{fig:exp:space:memory} 展示了在不同查询图大小下，各算法的内存占用。
 请注意，在CSM-TopK中，随着参数 $k$ 的变化，空间开销的差异可以忽略不计。
+
 如图~\ref{fig:exp:space:memory}所示，我们的方法在空间效率上明显优于 \itk、\pm、Rapidflow 和 CaLiG。
 
-在LiveJournal，YouTube，Orkut数据集上，\itk、\pm 这两种静态方法都耗尽内存而停止，这主要是因为它们的索引在大规模数据集上的时空复杂度都是指数级别的。
+从图中可以看出，在不同查询图大小下，我们的算法在空间效率上明显优于 \itk、\pm、RapidFlow 和 CaLiG。
+特别是在 LiveJournal、YouTube 和 Orkut 数据集上，静态算法（如 \itk 和 \pm）由于其索引结构在处理大规模数据时具有指数级别的时空复杂度，最终导致内存耗尽而无法执行。
 而GraphFlow由于不维护索引，其空间开销主要来自于维护所有匹配项，因此在空间效率上与我们的算法相似。
 我们的算法通过设计轻量级的索引，其索引仅与查询图的一阶邻居有关，从而达到线性的空间复杂度。
 
@@ -148,13 +168,14 @@
     }
     \caption{索引构建时间  ($|E_Q|=8, k=100$)}
     \label{fig:exp:time:index}
-\end{figure}    
-我们对不同算法的索引构建时间进行了对比，实验结果如图~\ref{fig:exp:time:index}所示，
-可以看到，我们的算法在索引构建时间上比对比算法快2到5个数量级。
+\end{figure} 
+索引构建时间是影响算法整体性能的一个重要因素。
+我们对比了不同算法在索引构建过程中的时间消耗，实验结果如图~\ref{fig:exp:time:index} 所示。   
 
-特别地，\pm 和 \itk 在索引构建时消耗的时间较长，因为它们在静态场景下采用离线构建索引，在动态场景下则需要每次更新时重新构建索引。
+
+从图中可以看出，我们的算法在索引构建时间上明显优于其他对比算法，速度快了约 2 至 5 个数量级。
+特别是 \itk 和 \pm，这两种算法在索引构建时的时间消耗较大，因为它们在静态场景下采用离线索引构建，在动态场景下需要每次数据更新时重新构建索引。这导致了它们在大规模数据集上的表现非常差。
 而Graphflow 由于不维护索引或其他辅助数据结构，因此不在此实验的对比范围内。
-
 
 \subsection{自身对比}
 \label{ch5:couterparts}
@@ -165,10 +186,13 @@
 \label{sec:couterparts}
 我们将我们提出的四种优化算法进行了对比，以验证最终优化策略的有效性。
 图 \ref{fig:time:counterpart:fixQuerySize} -图 \ref{fig:time:counterpart:fixKSize} 展示了不同$k$值和查询图大小$|E_Q|$下，我们提出的不同算法的时间开销。
+
 从实验结果中可以看到，基于压缩图的最终版本显著优于基于原始图的版本，性能提升了约 $1{\sim}2$ 个数量级。
-同时，MWstar-global 和 MWstar-both 的性能明显优于基准方法。
-从图 \ref{fig:time:counterpart:fixQuerySize} 到图 \ref{fig:time:counterpart:fixKSize} 还可以看出，MWstar-both 的搜索效率明显高于 MWstar-global。
-上述实验结果表明，我们算法的优势在于 MWstar 索引和图压缩策略，将这两者结合形成最终的优化算法，能够将算法的执行效率提升到最高。
+同时，MWstar-global 和 MWstar-both 的性能明显优于基准方法。这说明我们提出的基于MWstar索引的策略能够有效提高算法的执行效率。
+在图 \ref{fig:time:counterpart:fixQuerySize} 到图 \ref{fig:time:counterpart:fixKSize} 还可以看出，MWstar-both 的搜索效率明显高于 MWstar-global，
+这证明了我们结合全局和局部索引的策略，能够显著提升搜索速度。
+
+综上所述，最终的优化策略将 MWstar 索引和图压缩策略结合，能够将算法的执行效率提升到最高水平，充分证明了我们提出的优化方法在实际应用中的有效性和优越性。
 
 \section{案例研究}
 \begin{figure}[h!]
