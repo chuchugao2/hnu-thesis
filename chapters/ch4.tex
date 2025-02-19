@@ -1,6 +1,6 @@
 \chapter{基于压缩图的轻量级索引MWStar}
 \label{ch4}
-本章具体讨论了我们提出的全局与局部MWstar索引方法以及图压缩算法。在基于TopK密度剪枝的连续子图匹配问题中，如何高效地查询和更新子图匹配结果一直是一个挑战。
+本章具体讨论了我们提出的全局与局部MWstar索引方法以及图压缩算法。在TopK密度约束下的连续子图匹配问题中，如何高效地查询和更新子图匹配结果一直是一个挑战。
 为了提升子图匹配的效率，我们提出了一种轻量级的MWstar索引方法。
 该方法通过对星形子结构的部分匹配进行高效的索引，从而能够实现快速的增量更新和密度剪枝。
 本章将详细介绍该方法的设计与实现，包括全局版本和局部版本的优化过程，并最终构建基于密度上限的筛选函数。
@@ -12,15 +12,15 @@
 在第\ref{mwstar:local}节中，我们将把这个初步版本优化为局部版本，以实现更好的基于密度的剪枝能力。
 局部版本相较于全局版本，动态维护了索引密度上限，在复杂的动态图环境中，它能够有效地降低重复计算的开销，从而提升整体的计算效率。
 我们结合全局和局部MWstar，构建最终的密度上限函数，能够在图数据动态变化时实时进行剪枝，更新子图匹配结果，并根据密度优先级进行高效筛选。
-最后，我们介绍了一种图压缩策略，通过压缩图生成候选子图，该子图大小的规模远小于原始图。并且在该子图上对于轻量级索引的维护步骤仍与原始图相同，
+最后，我们介绍了一种图压缩策略，通过标签过滤策略生成压缩图，该图大小的规模远小于原始图。并且在该子图上对于轻量级索引的维护步骤仍与原始图相同，
 其巧妙利用图压缩策略对候选节点的筛选能力以及轻量级索引对部分匹配的剪枝能力，大幅度提升了筛选top-k最高密度子图的效率。
 
 \section{MWSTAR：CSM-TopK的轻量级索引}
 
 \begin{figure}[h!]
-\def\wscorevone{0.48}
+\def\wscorevone{0.45}
 \centering
-\begin{subfigure}[t]{\wscorevone\linewidth}
+\begin{subfigure}[t]{0.465\linewidth}
 \centering
 \resizebox{\linewidth}{!}
 {
@@ -29,7 +29,7 @@
 \caption{Qstar示例}
 \label{fig:qstar}
 \end{subfigure}
-\begin{subfigure}[t]{\wscorevone\linewidth}
+\begin{subfigure}[t]{0.515\linewidth}
 \centering
 \resizebox{\linewidth}{!}
 {
@@ -47,7 +47,7 @@
 
 \begin{definition}[星形结构子图]\label{def:star-subquery}
 对于查询$Q$和匹配序列$\Phi=\{u_1, u_2, \cdots, u_{|Q|} \}$，我们为每个查询顶点$u_i$定义其在$\Phi$下的星形结构子图$Qstar_{\Phi}(u_i)$，
-其包含顶点$LN(u_i) \cup {u_i}$以及连接$u_i$与其左邻居的边，即：$V_{Qstar_{\Phi}(u_i)} = LN(u_i) \cup \{u_i\}$，$E_{Qstar_{\Phi}(u_i)} = \{(u_i, u_j)\ |\ u_j\in LN(u_i)\}$。
+其包含顶点$LN(u_i) \cup \{u_i\}$以及连接$u_i$与其左邻居的边，即：$V_{Qstar_{\Phi}(u_i)} = LN(u_i) \cup \{u_i\}$，$E_{Qstar_{\Phi}(u_i)} = \{(u_i, u_j)\ |\ u_j\in LN(u_i)\}$。
 当上下文清晰时，我们可以用$Qstar(i)$表示相应的子图。
 \end{definition}
 
@@ -102,7 +102,7 @@
     设$g_{min}$为$A$中权重最小的匹配 \
     \If{$|g^i|=|V_Q|$}{
     \If{$|A|<k \lor den(g_{min}) < den(g^i)$ } {
-    将$g^i$添加到$A$中. \\
+    将$g^i$添加到$A$中 \\
     从$A$中移除$g_{min}$ if $|A|>k$\\
     }
     \Return
@@ -151,7 +151,7 @@
   \end{equation*}
   在上下文明确时，我们也可以简写为 $gBound(g^i)$。
   
-  \textbf{基于上界的递归搜索}。 在我们的搜索过程中，对于每个部分匹配 $g^i$，如果 $gBound(g^i)$ 在当前已存在的 $G_t$ 匹配的密度排名中未能进入前 $k$ 名，，则我们可以安全地剪枝 $g^i$（详见算法 \ref{alg:find-dense-matches-gBound}  第 \ref{code:B-basic-begin}-\ref{code:B-basic-end}行）。
+  \textbf{基于上界的递归搜索}。 在我们的搜索过程中，对于每个部分匹配 $g^i$，如果 $gBound(g^i)$ 在当前已存在的 $G_t$ 匹配的密度排名中未能进入前 $k$ 名，则我们可以安全地剪枝 $g^i$（详见算法 \ref{alg:find-dense-matches-gBound}  第 \ref{code:B-basic-begin}-\ref{code:B-basic-end}行）。
   
   对于每一种匹配顺序 $\Phi$，我们可以在 $Qstar(i)$（$1 \leq i \leq |V_Q|$）下维护相应的星形结构子图的最大密度，这实际上构成了全局MWstar。
   显然，全局 MWstar 的空间开销是 $O(|E_Q|*|V_Q|)$，这一开销可以忽略不计的。
@@ -176,7 +176,7 @@
      然而这种方法效率很低，因为它要求对整个图 $G_t$ 进行扫描，开销为 $O(|V_{G_t}|d_t)$，即 $O(E_{G_t})$，其复杂度与图中的边数 $E_{G_t}$ 成线性关系。
 
      \begin{algorithm}[H]
-        \scriptsize
+        \small
         \caption{全局 MWstar 维护}
         \label{alg:base-mwstar:update}
         \KwIn{ $G_t$, $Q$ 和 $o_t={op, v_1, v_2}$}
@@ -209,25 +209,12 @@
              }
            }
       
-      \If{$op = +$}{
-          \ForEach{$(u_{i_1},u_{i_2})\in E_{Q}$ 匹配 $(v_1, v_2)$} {
-              \ForEach{匹配顺序 $\Phi$}{
-                  \If{$u_{i_1}\in LN(u_{i_2})$}{
-                      UpdateDensity($v_{2}$, $u_{i_2}$,$\Phi$) \\
-                  }
-                  \uElse { 
-                      UpdateDensity($v_{1}$, $u_{i_1}$,$\Phi$) \\
-                  }
-              }
-          }
-      } % If  
-      
       \SetKwFunction{FupdateMWstar}{updateDensity}
       \SetKwProg{Fn}{Function}{:}{\KwRet}
-      \Fn{\FupdateMWstar{$u_{i}$,$v_{j}$,$\Phi$}}{
-           /* 为每个 $v\in V_{G_t}$ 保持其邻接节点和对应边权重的排序是很简单的 */   \label{code:basic-den-update:begin}  \label{code:basic-sorted:begin}\\
-           假设 $LN(u_i) =$ \{$u_{i_1}$, $u_{i_2}$, $\cdots$, $u_{i_x}$\} \\
-           遍历 $N_{G_t}(v_j)$ 一次，计算出 $x$ 个不同的顶点 {$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$}
+      \Fn{\FupdateMWstar{$u_{i}$,$v_{j}$,$\Phi$}}{ 
+        %/*为每个 $v\in V_{G_t}$ 保持其邻接节点和对应边权重的排序是很简单的*/
+           假设 $LN(u_i) =$ \{$u_{i_1}$, $u_{i_2}$, $\cdots$, $u_{i_x}$\} \label{code:basic-den-update:begin}  \label{code:basic-sorted:begin}\\
+           遍历 $N_{G_t}(v_j)$ 一次，计算出 $x$ 个不同的顶点 \{$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$\}
            其中 $L(v_{j_{x^\prime}}) = L(u_{i_{x^\prime}})$ ($1\leq x^\prime\leq x$)   \label{code:basic-sorted:end} \\
            \If{这 $x$ 个顶点存在}{
            令 $g^\prime$ 表示由边从 $v_j$ 到 \{$v_{j_1}$, $v_{j_2}$, $\cdots, v_{j_x}$\} 组成的子图 \\
@@ -242,7 +229,7 @@
            }
     \end{algorithm}
      
-     为了提高效率，我们采取了另一种策略：始终记录 $A_{G_t, Qstar(i)}$ 中的部分匹配 $g^\prime$，它的密度为$den(Qstar(i))$（见算法 \ref{alg:base-mwstar:update} 行 \ref{code:record-denest}）。
+     为了提高效率，我们采取了另一种策略：始终记录 $A_{G_t, Qstar(i)}$ 中的部分匹配 $g^\prime$，它的密度为$den(Qstar(i))$（见算法 \ref{alg:base-mwstar:update} 第\ref{code:record-denest}行）。
      因此，当 $(v_1, v_2) \notin E_{g^\prime}$ 时，我们可以避免重新计算 $den(Qstar(i))$ 的高开销（见算法 \ref{alg:base-mwstar:update}  第 \ref{code:not-hit-return:begin}-\ref{code:not-hit-return:end}行）。
      通常，重新计算的概率是 $|E_{g^\prime}|/|E_{G_t}|$，即 $|LN(u_{i_2})|/|E_{G_t}|$。
      因此，重新计算的平均开销是 $O(|E_{G_t}|)*(|LN(u_{i_2})|/|E_{G_t}|)$，即 $O(|LN(u_{i_2})|)$。
@@ -331,7 +318,7 @@ $g^{i+1}\in$ $g^i\times C_{g^i}(u_{i+1})$
 传统的 $gBound$ 上界虽然能够提供搜索的粗略限制，但局部候选集 $C_{g^i}(u_j)$ 通过结合邻居信息，可以提供更为精确的密度上界，称为 $lBound$。
 这一上界是基于部分匹配 $g^i$ 的密度以及每个未匹配查询顶点的候选集 $C_{g^i}(u_j)$ 来计算的，比起 $gBound$ 更为严格，能够有效地减少不必要的匹配扩展。
 
-为了形式化这一概念，考虑一个完全匹配 $g={v_1, v_2, \cdots, v_{|V_Q|}}$，其中 $g^i$ 是其一个部分匹配。
+为了形式化这一概念，考虑一个完全匹配 $g=\{v_1, v_2, \cdots, v_{|V_Q|}\}$，其中 $g^i$ 是其一个部分匹配。
 对于每一个包含部分匹配 $g^i$ 的完全匹配 $g=\{v_1, v_2, \cdots, v_{|V_Q|}\}$，很明显 $v_j$（$i < j$）必须在 $C_{g^i}(u_j)$ 中，因此我们可以得出以下结论：
 \begin{equation*}
     \begin{aligned}
@@ -422,10 +409,10 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
     \caption{基于全局和局部 MWstars 的 CSM-TopK 搜索算法}
     \label{alg:localmwstar:framework}
     \KwIn{一个动态图 $\iG = (G_0, \Delta)$，查询图$Q$ 和 参数$k$}
-    \KwOut{对于每个 $G_t$，报告 $A^k_t = {g_1, g_2, \ldots, g_k}$}
+    \KwOut{对于每个 $G_t$，报告 $A^k_t = \{g_1, g_2, \ldots, g_k\}$}
     % \tcc{离线预处理}
-    BuildMatchingOrder($Q$, $u_1$, $u_2$) 对于每个 $(u_1, u_2) \in Q$ \\
-    BuildMWstar($G_0$, $Q$, $\Phi$) 对每个 $\Phi$  \\
+    BuildMatchingOrder($Q$, $u_1$, $u_2$) ,对于每个 $(u_1, u_2) \in Q$ \\
+    BuildMWstar($G_0$, $Q$, $\Phi$) ,对每个 $\Phi$  \\
     计算 $A_0^k$ 在 $G_0$ 上的查询 $Q$ \\
     % \tcc{在线预处理}
     \ForEach{$o_t = (op, v_1, v_2) \in \Delta$}{
@@ -433,7 +420,7 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
     初始化 $A^k_{t}$ 为 $A^k_{t-1}$ \\
     \If{$op = +$}{
     \ForEach{$(u_1, u_2) \in E_{Q_t}$ 匹配 $(v_1, v_2)$} {\label{local:code:baseline:begin}
-    令 $g^2 = {v_1, v_2}$ \\
+    令 $g^2 = \{v_1, v_2\}$ \\
     设 $v_1$，$v_2$ 为已访问\\
     令 $\Phi$ 为匹配序列，并从 $u_1$，$u_2$ 开始 \\
     \ForEach{$u_j \in V_Q \setminus V_{q^2}$}{ \label{code:init-lcs:begin}
@@ -535,7 +522,7 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 通过这种方法，我们能够显著减降低图表示和存储的空间开销。
 首先，$\cQ$与$Q$具有相同的顶点集和边集，唯一的不同在于新的标签函数$\cL_{\cQ}$（当上下文明确时简写为$\cL$），其中$\cQ$中的每个查询顶点都被赋予了新的唯一标签。
 在不失一般性的情况下，我们假设$\cL(u_j) = l_j^{new}$。
-因此，$\cQ = {V_Q, E_Q, \cL}$。
+因此，$\cQ = \{V_Q, E_Q, \cL\}$。
 
 
 
@@ -549,9 +536,10 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 在这一部分中，我们详细讨论如何在$G_t$和$Q$上构建压缩图$\cG_t$。构建过程包括数据顶点的匹配关系、压缩图的顶点集和边集的构造。
 
 我们用$\tau$表示$\cG_t$中的一个数据顶点，用$\cg$表示$\cG_t$中的一个子图。
-每个顶点$\tau \in V_{\cG_t}$都对应着$V_{G_t}$中的一个数据顶点和$V_Q$中的一个查询顶点之间的匹配关系，即图$G_t$中的数据顶点$v_i$和查询图$Q$中的查询顶点$u_j$之间的匹配关系。
+每个顶点$\tau \in V_{\cG_t}$都对应着$V_{G_t}$中的一个数据顶点和$V_Q$中的一个查询顶点之间的匹配关系。
 我们使用$\langle v_i, u_j \rangle$来表示一个匹配关系，其中$v_i$与$u_j$匹配，其中$v_i$是$u_j$的候选数据顶点。
 为了确保数据顶点$v_i$和查询顶点$u_j$之间的匹配关系合理，我们引入了邻域标签频率过滤（NLF）~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}，即对于顶点$v_i$和查询顶点$u_j$，如果$v_i$通过了$u_j$的NLF规则~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}（即$v_i$的邻域中标签频率大于等于$u_j$的邻域标签频率），则称$v_i$是$u_j$的NLF候选（NLF-candidate），即：
+
 $v_i$匹配$u_j$，并且对于任何标签$l$（在$L_Q$下，而不是$\cL_{\cQ}$），有$|N_{G_t}^l(v_i)| \geq |N_Q^l(u_j)|$。
 
 每个顶点$\tau \in V_{\cG_t}$恰好对应一个唯一的匹配关系$\langle v_i, u_j \rangle$，其中$v_i$是$u_j$的NLF候选。
@@ -632,6 +620,7 @@ $v_i$匹配$u_j$，并且对于任何标签$l$（在$L_Q$下，而不是$\cL_{\c
 在这一小节中，们将详细探讨如何根据每个更新操作 $o_t$（$t>0$）调整图 $\cG_{t-1}$ 以生成新的图 $\cG_t$。
 特别地，我们将讨论如何处理图 $\cG_t$ 上的 MWstars 更新，图 $\cG_{t-1}$ 上的更新操作如何影响压缩图结构的调整，以及边的插入和删除是如何影响图的维护。
 对于压缩图上的 MWstars 维护，过程与我们之前的讨论完全一致。
+
 假设我们已经在 $\cG_{t-1}$ 上构建了全局和局部的 MWstar。
 现在考虑一个更新操作 $o_t=$ $(op, v_{i_1}, v_{i_2})$，其中 $v_{i_1}$ 和 $v_{i_2}$ 分别与 $u_{j_1}$ 和 $u_{j_2}$ 匹配。
 %
@@ -693,10 +682,10 @@ $v_i$匹配$u_j$，并且对于任何标签$l$（在$L_Q$下，而不是$\cL_{\c
 在每次删除边后，我们将相应地更新 MWstars。根据第 \ref{ch3:base-framework} 节中的框架，如果之前排名前 $k$ 的匹配结果已经过期，无论 $\cG_{t-1}$ 中删除了多少条边，我们只需要计算一次补充的答案。
 此外，我们的重新计算是在压缩图 $\cG_t$ 上进行的，而不是在 $G_t$ 上。
 
-压缩图是一种通过优化存储和处理方式来减少图数据规模的结构，其核心目的是在不丧失图的核心信息和特性下，减少计算和存储开销，进而提高大规模图处理的效率。
-在图算法中，尤其是当处理的图非常庞大时，压缩图提供了一种有效的方式来减少内存使用并加速计算。
+% 压缩图是一种通过优化存储和处理方式来减少图数据规模的结构，其核心目的是在不丧失图的核心信息和特性下，减少计算和存储开销，进而提高大规模图处理的效率。
+% 在图算法中，尤其是当处理的图非常庞大时，压缩图提供了一种有效的方式来减少内存使用并加速计算。
 
-本文基于NLF规则提出了一种图压缩策略，每次数据图发生更新时（如插入、删除操作），压缩图会动态地对压缩图的结构进行调整（如节点和边的增加或者删除），确保图结构在更新后依然保持有效性。
+本节基于NLF规则提出了一种图压缩策略，每次数据图发生更新时（如插入、删除操作），压缩图会动态地对压缩图的结构进行调整（如节点和边的增加或者删除），确保图结构在更新后依然保持有效性。
 在图更新过程中，我们对于压缩图的插入和删除操作的处理方式具有高效性。
 对于插入操作，压缩图会检查是否有新的查询点的NLF候选者出现，若符合条件，则在图中添加新的顶点以及新的边。
 对于删除操作，则会删除不再有效的边和顶点，从而保证图结构的精简和高效。

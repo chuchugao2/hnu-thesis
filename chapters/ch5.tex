@@ -88,13 +88,13 @@
 \textbf{对比方法}
 在本节实验中，我们将评估所提出的算法在上述真实数据集上的性能。为了全面评估我们的算法，我们将我们提出的几种优化算法进行横向对比，包括：
 
-（1） Baseline: 第\label{ch3:base-framework}小节中提出的CSM-TopK问题的基础计算框架，该框架利用第 $k$ 个子图匹配结果作为剪枝上限，提供了一种简单而有效的基线方案。
+（1） Baseline: 第\ref{ch3:base-framework}小节中提出的CSM-TopK问题的基础计算框架，该框架利用第 $k$ 个子图匹配结果作为剪枝上限，提供了一种简单而有效的基线方案。
 
 （2）MWstar-global:第\ref{mwstar:global}小节中提出的基于全局MWstar索引的面向CSM-TopK问题的算法。
 
 （3）MWstar-both:第\ref{mwstar:local}小节中提出的同时基于全局MWstar和局部MWstar的索引。该算法结合了全局和局部信息，利用更紧凑的密度上限来解决CSM-TopK问题。
 
-（4） Our-final: 第\label{mwstar:compact-graph}小结中提出的压缩图技术，将它与局部MWstar相结合，形成我们的最终解决方案，并且作为本章实验中的对比算法。
+（4） Our-final: 第\ref{mwstar:compact-graph}小结中提出的压缩图技术，将它与局部MWstar相结合，形成我们的最终解决方案，并且作为本章实验中的对比算法。
 
 
 我们将我们的最终方案Our-final（简称为Ours），与现有的具有TopK密度约束的静态子图匹配工作进行比较，包括 \itk\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14} 和 \pm\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}。
