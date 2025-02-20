@@ -86,6 +86,7 @@
 我们进一步分析了查询图的大小与算法时间、空间效率之间的关系，并通过这些实验深入评估了算法在实际应用中的表现。
 
 \textbf{对比方法}
+
 在本节实验中，我们将评估所提出的算法在上述真实数据集上的性能。为了全面评估我们的算法，我们将我们提出的几种优化算法进行横向对比，包括：
 
 （1） Baseline: 第\ref{ch3:base-framework}小节中提出的CSM-TopK问题的基础计算框架，该框架利用第 $k$ 个子图匹配结果作为剪枝上限，提供了一种简单而有效的基线方案。
@@ -94,16 +95,16 @@
 
 （3）MWstar-both:第\ref{mwstar:local}小节中提出的同时基于全局MWstar和局部MWstar的索引。该算法结合了全局和局部信息，利用更紧凑的密度上限来解决CSM-TopK问题。
 
-（4） Our-final: 第\ref{mwstar:compact-graph}小结中提出的压缩图技术，将它与局部MWstar相结合，形成我们的最终解决方案，并且作为本章实验中的对比算法。
+（4） Our-final: 第\ref{mwstar:compact-graph}小节中提出的压缩图技术，将它与局部MWstar相结合，形成我们的最终解决方案，并且作为本章实验中的对比算法。
 
 
 我们将我们的最终方案Our-final（简称为Ours），与现有的具有TopK密度约束的静态子图匹配工作进行比较，包括 \itk\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14} 和 \pm\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}。
 此外，我们还将我们的最终方案与几种最先进的CSM方法进行了对比，包含 Graphflow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17}、Rapidflow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22} 和 CaLiG~\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}。
-需要注意的是，\itk 在处理 LiveJournal 和 YouTube 数据集时，因内存不足而导致无法执行，相关的实验结果标记为“无穷大”。
+需要注意的是，\itk 在处理 LiveJournal、Orkut和YouTube数据集时，因内存不足而导致无法执行，相关实验结果标记为“无穷大”。
 
 \section{实验结果分析}
 \label{ch5:overall-compare}
-本章详细分析了我们提出的算法在不同实验设置下的性能表现。
+本节详细分析了我们提出的算法在不同实验设置下的性能表现。
 我们通过与现有的对比算法在多个维度上进行比较，展示了我们算法的优势。
 实验结果主要集中在以下几个方面：插入与删除效率、空间效率、索引构建时间，以及不同优化策略的对比。
 \subsection{插入与删除效率对比}
@@ -131,7 +132,7 @@
 其他现有的CSM算法（如GraphFlow、RapidFlow和CaLiG）的平均执行时间几乎保持不变。
 这是因为这些算法基于连续子图匹配策略，并且没有采用基于密度的剪枝技术，因此它们在执行时需要遍历和排序所有的子图匹配结果，即使 $k$ 值增大，算法始终维护所有的子图匹配结果，导致其执行时间不随着$k$值影响。
 相比之下，如图~\ref{fig:time:insertion:fixKSize} 和图~\ref{fig:time:deletion:fixKSize}所示，在$k$值增加时，其他已有的CSM的解决方法的平均执行时间几乎不受影响。
-特别地，在Orkut数据集上，Graphflow、RapidFlow和CaLiG的结果非常相似，，表明它们在处理大规模数据集时遇到的瓶颈是相似的。
+特别地，在Orkut数据集上，Graphflow、RapidFlow和CaLiG的结果非常相似，表明它们在处理大规模数据集时遇到的瓶颈是相似的。
 而对于 \itk 和 \pm，尽管它们采用了基于密度的剪枝策略，但由于索引重建时需要消耗大量的时间，因此不同 $k$ 值之间的性能差异不大，整体表现较差。
 
 我们还观察到，在动态更新场景中，静态TopK方法（如 \itk 和 \pm）表现最差。
@@ -149,14 +150,14 @@
 \input{\csmnewFig space_memory}
 空间效率是另一个衡量算法性能的关键指标。我们进一步评估了不同算法在处理查询图时的内存使用情况。
 图~\ref{fig:exp:space:memory} 展示了在不同查询图大小下，各算法的内存占用。
-请注意，在CSM-TopK中，随着参数 $k$ 的变化，空间开销的差异可以忽略不计。
+请注意，在CSM-TopK中，随着参数 $k$ 的变化，空间开销的差异可以忽略不计，因此在本节中不做讨论。
 
 如图~\ref{fig:exp:space:memory}所示，我们的方法在空间效率上明显优于 \itk、\pm、Rapidflow 和 CaLiG。
 
 从图中可以看出，在不同查询图大小下，我们的算法在空间效率上明显优于 \itk、\pm、RapidFlow 和 CaLiG。
 特别是在 LiveJournal、YouTube 和 Orkut 数据集上，静态算法（如 \itk 和 \pm）由于其索引结构在处理大规模数据时具有指数级别的时空复杂度，最终导致内存耗尽而无法执行。
 而GraphFlow由于不维护索引，其空间开销主要来自于维护所有匹配项，因此在空间效率上与我们的算法相似。
-我们的算法通过设计轻量级的索引，其索引仅与查询图的一阶邻居有关，从而达到线性的空间复杂度。
+% 但我们的算法通过设计轻量级的索引，其索引仅与查询图的一阶邻居有关，从而达到线性的空间复杂度。
 
 
 \subsection{索引构建时间对比}
@@ -206,7 +207,7 @@
 图 \ref{fig:human-caseStudy} 展示了一个查询图 $Q_1$ 及其在蛋白质相互作用网络~\cite{dat-protein} 中的查询结果。
     查询图$Q_1$ 表示由一个调节蛋白和3个肽酶组成的关键结构，边的权重表示它们之间的相互促进或抑制的程度。
     我们根据边的权重优先级对子图进行排序，以识别与相互作用度最高的前 $k$ 个子图。
-    在匹配序列 ${u_1, u_2, u_3, u_4}$ 下，最密集的答案是 $g_0=${$SIRT1$, $EP300$, $p53$, $MDM2$}。
+    在匹配序列 $\{u_1, u_2, u_3, u_4\}$ 下，最密集的答案是 $g_0=$\{$SIRT1$, $EP300$, $p53$, $MDM2$\}。
     值得注意的是，$p53$ 是在人类细胞中广泛研究的肿瘤抑制蛋白，而其他三个蛋白激酶表现出强烈的相互作用，并对 $p53$ 的活性产生显著的促进作用，这可能与肿瘤疾病的状态密切相关。
 \section{本章小结}
 本章详细介绍了我们提出的算法的实验设计与结果分析。
