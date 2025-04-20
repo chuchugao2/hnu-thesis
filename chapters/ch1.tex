@@ -9,9 +9,10 @@
 
 在动态数据的分析中，连续子图匹配（Continuous Subgraph Matching，简称CSM）问题是一个重要的研究方向，主要用于在动态图数据中实时识别与给定模式相匹配的子图。
 与传统的静态子图匹配问题不同，CSM 需要在数据不断变化的情况下，依然能够高效、准确地找到符合特定结构的子图。
-这种动态变化的场景在许多现实世界应用中具有广泛的适用性。
-在金融反欺诈中，我们希望及时发现隐藏在交易网络中的大型欺诈团伙；在网络安全领域，安全人员更关注攻击模式的演变，以便及时拦截恶意攻击。
-这些应用都对动态图子图匹配的计算效率和准确性提出了更高要求，因此，如何在动态环境下高效执行 CSM，成为了一个亟待解决的挑战。
+
+这一动态性需求在​​实时决策场景​​中尤为关键：例如，金融交易监控需即时捕捉可疑模式，网络攻击检测需追踪动态演变的威胁行为。
+然而，现有方法在处理大规模动态图时面临严峻挑战——​​海量匹配结果导致计算过载​​，且动态变化加剧了算法效率与精度间的矛盾。
+因此，如何在动态环境下高效执行 CSM，成为了一个亟待解决的挑战。
 
 与此同时，随着数据规模的爆炸式增长，这一问题变得更加紧迫。特别是进入 5G 时代后，数据的体量、种类和变化速度远超以往。
 例如，截至2024年11月13日，微信及WeChat的月活跃账户数已达到13.82亿，几乎覆盖了全国人口，并且仍在增长；
@@ -21,13 +22,13 @@
 在如此庞大的图数据中，符合某个特定模式的匹配结果可能非常多，但在实际应用中，我们通常更关注最有价值的结果。
 例如，在金融欺诈模式的挖掘中~\cite{csm-cycle-DBLP:journals/pvldb/QiuCQPZLZ18}，监管机构更关心那些涉及交易金额最高的欺诈团伙，而非所有可疑交易模式；
 在网络安全领域，管理员更倾向于定位受攻击最严重恶意攻击子网~\cite{traffic-graph-matching-DBLP:journals/pvldb/SongGCW14}，而非每一个潜在的攻击行为。
-因此，在动态图匹配时，除了考虑拓扑结构，还需要引入边权属性、设定密度限制，以筛选出更具分析价值的子图集合。
+因此，在动态图匹配时，除了考虑拓扑结构，还需要引入边权属性来设定密度限制，以筛选出更具分析价值的子图集合。
 这不仅能提高匹配结果的相关性，也能帮助分析人员更快定位核心问题，从而提升整体效率。
-在如此庞大的图数据中，符合某个特定模式的匹配结果可能非常多，但在实际应用中，我们通常更关注最有价值的结果。
-例如，在金融欺诈模式的挖掘中~\cite{csm-cycle-DBLP:journals/pvldb/QiuCQPZLZ18}，监管机构更关心那些涉及交易金额最高的欺诈团伙，而非所有可疑交易模式；
-在网络安全领域，管理员更倾向于定位受攻击最严重恶意攻击子网~\cite{traffic-graph-matching-DBLP:journals/pvldb/SongGCW14}，而非每一个潜在的攻击行为。
-因此，在动态图匹配时，除了考虑拓扑结构，还需要引入边权属性、设定密度限制，以筛选出更具分析价值的子图集合。
-这不仅能提高匹配结果的相关性，也能帮助分析人员更快定位核心问题，从而提升整体效率。
+% 在如此庞大的图数据中，符合某个特定模式的匹配结果可能非常多，但在实际应用中，我们通常更关注最有价值的结果。
+% 例如，在金融欺诈模式的挖掘中~\cite{csm-cycle-DBLP:journals/pvldb/QiuCQPZLZ18}，监管机构更关心那些涉及交易金额最高的欺诈团伙，而非所有可疑交易模式；
+% 在网络安全领域，管理员更倾向于定位受攻击最严重恶意攻击子网~\cite{traffic-graph-matching-DBLP:journals/pvldb/SongGCW14}，而非每一个潜在的攻击行为。
+% 因此，在动态图匹配时，除了考虑拓扑结构，还需要引入边权属性、设定密度限制，以筛选出更具分析价值的子图集合。
+% 这不仅能提高匹配结果的相关性，也能帮助分析人员更快定位核心问题，从而提升整体效率。
 
 然而，目前的研究大多集中在静态图中的Top-k密度约束子图匹配问题~\cite{density-define-DBLP:journals/vldb/AngelKSSST14,dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12}，这种方法构建大量的离线索引来提供权重的上界，然而其索引构建所需要的时间和空间受到了查询图中的标签大小以及数量的影响，其高昂的索引构建开销使得这些方法在动态图中不具有普遍适用性。
 此外，现有动态图的工作只聚焦于所有子图匹配结果的返回，在结果数量过大的情况下，也只能随机限定返回数量的上限，缺乏对返回结果的其他条件约束~\cite{csm-sjtree-DBLP:conf/edbt/ChoudhuryHCAF15,csm-IncIsoMatch-DBLP:conf/sigmod/FanLLTWW11,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18,csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21,csm-symbi-DBLP:journals/pvldb/MinPPGIH21,csm-rapidflow-DBLP:journals/pvldb/SunSHL22}。
@@ -55,7 +56,7 @@
 除了直接依赖增量计算的匹配方法外，另一类研究则借助辅助数据结构（如生成树、有向无环图（DAG））来加速子图匹配，以降低计算开销并提高查询效率。
 例如，韩国的Kyoungmin提出TurboFlux\cite{csm-turboflux-DBLP:conf/sigmod/KimSHLHCSJ18}，这是一种基于生成树索引的连续子图匹配方法。它在查询图的生成树基础上，在数据图中构建相应的辅助索引，从而提升匹配效率。
 TurboFlux 的核心优势在于其增量更新能力，可以快速定位受影响的区域，避免对整个图重新计算，从而大幅降低计算成本，使其在动态图环境下具有良好的适应性。
-此外，韩国科学技术院的 Wook-Shin Han 教授团队提出Symbi\cite{csm-symbi-DBLP:journals/pvldb/MinPPGIH21}，该方法将查询图转化为有向无环图，并利用 DAG 对非树边的剪枝能力，在搜索过程中实现显著加速。。
+此外，韩国科学技术院的 Wook-Shin Han 教授团队提出Symbi\cite{csm-symbi-DBLP:journals/pvldb/MinPPGIH21}，该方法将查询图转化为有向无环图，并利用 DAG 对非树边的剪枝能力，在搜索过程中实现显著加速。
 另一项值得关注的研究是RapidFlow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22}，其采用全局索引策略，根据查询图的拓扑结构构建全局索引，并在查询过程中利用该索引快速生成局部索引，极大地减少子图匹配的计算开销。
 此外，复旦大学郑卫国教授团队提出了一种具有成本效益的索引方法——CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}，其核心思想是通过构建高效索引结构来减少回溯搜索的空间。
 CaLiG 通过构建高效的索引结构，能够在匹配过程中快速剪枝，从而更高效地完成匹配任务。该方法在处理具有复杂拓扑结构的查询图时表现出较好的性能。
@@ -66,7 +67,7 @@ CaLiG 通过构建高效的索引结构，能够在匹配过程中快速剪枝�
 \subsection{现有的Top-k密集子图挖掘问题}
 在现有的Top-k密集子图挖掘（Top K Dense Subgraph Mining）研究中，密度的定义通常根据图中节点的度数或边权值进行区分~\cite{dsm-noweight-Bahmani-DBLP:journals/pvldb/BahmaniKV12,dsm-noweight-Balalau-DBLP:conf/wsdm/BalalauBCGS15,dsm-noweight-Bonchi-DBLP:journals/corr/abs-2007-01533,dsm-noweight-Dondi-DBLP:journals/corr/abs-2002-07695,dsm-noweight-Fang-DBLP:journals/pvldb/FangYCLL19,dsm-noweight-Gabert-DBLP:conf/wsdm/GabertPC21,dsm-noweight-Hu-DBLP:conf/cikm/HuWC17,dsm-noweight-Ma-DBLP:journals/pvldb/MaCLH22,dsm-noweight-Mathieu-DBLP:journals/corr/abs-2010-07794,dsm-noweight-McGregor-DBLP:journals/corr/McGregorTVV15,dsm-noweight-Rozenshtein-DBLP:journals/tkdd/RozenshteinTG17,dsm-noweight-Saha-DBLP:journals/corr/abs-2212-08820,dsm-noweight-Tsourakakis-DBLP:conf/kdd/TsourakakisBGGT13,dsm-noweight-Valari-DBLP:conf/ssdbm/ValariKP12,dsm-noweight-Zhao-DBLP:conf/icalip/ZhaoQYB14,dsm-weight-Angel-DBLP:journals/vldb/AngelKSSST14,dsm-weight-Ma-DBLP:conf/icde/MaHWLH17,dsm-weight-Muhammad-DBLP:conf/cikm/NasirGMG17},
 
-论是在动态还是静态场景中，这些方法的核心问题都是如何定义和计算图的“密度”，并基于这一指标寻找最密集的子图。
+无论是在动态还是静态场景中，这些方法的核心问题都是如何定义和计算图的“密度”，并基于这一指标寻找最密集的子图。
 具体而言，密集子图的挖掘问题大致可以分为两类：一类是基于节点度数定义的密度，另一类是基于边权值定义的密度。
 
 \subsubsection{基于节点度数的密度定义}
@@ -104,8 +105,8 @@ Gupta\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}是首个提出将密度
 这种方法的最大优势在于，它通过有效的索引构建，可以利用索引的最大密度进行剪枝，减少了搜索空间，提高了匹配效率。
 %由于时间和空间复杂度都呈指数增长，这使得索引构建的成本极高。
 然而，这种方法的主要局限性在于，随着$d$的增大，索引构建的代价会显著增加，导致其在动态场景下的应用变得困难。
-尤其是在需要实时更新图数据的情况下，Gupta提出的索引结构在计算和存储上都存在指数级的增长，限制了其在动态图中的适用性。
-特别是在动态图的更新过程中，随着节点和边的频繁变化，现有索引结构需要频繁更新，这会导致索引构建的计算成本和存储成本都迅速攀升，难以适应实际应用中对实时性和效率的要求。
+尤其是在需要实时更新图数据的情况下，Gupta提出的索引结构在计算和存储上都存在指数级的增长，这会导致索引构建的计算成本和存储成本都迅速攀升，限制了其在动态图中的适用性。
+% 特别是在动态图的更新过程中，随着节点和边的频繁变化，现有索引结构需要频繁更新，。
 
 
 在此基础上，Chen\cite{static-topk-Chen-DBLP:journals/ijprai/ChenLCTL18}等人对Gupta的工作进行了优化，提出了通过压缩数据图来减少枚举的范围，同时通过基于一阶邻居筛选候选节点以降低图拓扑索引的成本。
@@ -132,15 +133,12 @@ Gupta\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}是首个提出将密度
 
 
 因此，本研究的核心目标是提出一种新的方法，解决动态场景下融合密度和拓扑结构约束的Top-k连续子图匹配问题。
-具体而言，我们通过动态图模型中引入的边权值来量化密度优先级排序，并在返回的匹配结果中，除了需要同查询图形成结构上的匹配关系外，还需要满足按照密度优先级排序进入前$k$个子图（$k$为指定的参数）。具体的研究内容包括以下两个方面：
+具体而言，我们通过动态图模型中引入的边权值来量化密度优先级排序，并在返回的匹配结果中，除了需要同查询图形成结构上的匹配关系外，还需要满足按照密度优先级排序进入前$k$个子图（$k$为指定的参数）。
 因此，本研究的核心目标是提出一种新的方法，以解决动态场景下融合密度和拓扑结构约束的Top-k连续子图匹配问题。
 具体而言，我们通过动态图模型中引入的边权值来量化密度优先级排序，并在返回的匹配结果时，确保它们不仅满足与查询图的结构匹配，还能按照密度优先级排序进入前$k$个子图（$k$为指定的参数）。具体的研究内容包括以下两个方面：
 
 （1）插入更新下结合密度的增量查询搜索剪枝
 
-      在插入更新的情况下，需要额外考虑密度约束来优化搜索剪枝策略。由于引入了密度优先级机制和匹配结果数量的限制，搜索的目标范围更窄。
-      若继续采用传统的CSM的搜索策略，其效率不高。
-      因此，需要新的搜索策略，重点研究如何结合密度优先级顺序以及结果数限定来高效剪枝，从而提升查询性能。
       在插入更新的情况下，需要额外考虑密度约束来优化搜索剪枝策略。由于引入了密度优先级机制和匹配结果数量的限制，搜索的目标范围更窄。
       若继续采用传统的CSM的搜索策略，其效率不高。
       因此，需要新的搜索策略，重点研究如何结合密度优先级顺序以及结果数限定来高效剪枝，从而提升查询性能。
@@ -151,9 +149,7 @@ Gupta\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}是首个提出将密度
    此时，需要从数据图中补充新的子图以维持结果集的完整性。
    然而，相比于插入更新，补充操作的挑战更大，因为插入仅影响增量部分，而补充则需要在全图范围内重新搜索合适的子图。
    因此，设计高效的补充策略是删除更新场景下的关键问题。
-   此时，需要从数据图中补充新的子图以维持结果集的完整性。
-   然而，相比于插入更新，补充操作的挑战更大，因为插入仅影响增量部分，而补充则需要在全图范围内重新搜索合适的子图。
-   因此，设计高效的补充策略是删除更新场景下的关键问题。
+
    综上所述，CSM-TopK问题的核心挑战在于设计一种基于密度的高效索引结构以进行剪枝，并针对删除操作设计有效的补充策略。基于上述研究内容，本研究的贡献包括：
 \begin{itemize}[label={\textbullet}]
     \item \textbf{CSM-TopK问题。}本研究首次提出了CSM-TopK问题，将TopK密度约束纳入动态加权图上的连续子图匹配问题，并证明了该问题是NP难的。
@@ -172,7 +168,7 @@ Gupta\cite{static-topk-Gupta-DBLP:conf/icde/GuptaGYCH14}是首个提出将密度
 首先给出 CSM-TopK 问题的基本定义，然后介绍本文提出的 CSM-TopK 基础框架。
 接着，阐述基于密度剪枝策略的基线方案，并提供相应的伪代码以说明其实现过程。
 
-第 4 章\ 轻量级索引MWStar。在密度约束下的TopK连续子图匹配问题的基础框架下，本章首先介绍轻量级索引结构MWStar的设计，随后提出了两种索引策略：全局 MWStar 和局部 MWStar，并通过理论分析证明了局部 MWStar 在密度上限方面的优势。
+第 4 章\ 轻量级索引MWStar和图压缩技术。在密度约束下的TopK连续子图匹配问题的基础框架下，本章首先介绍轻量级索引结构MWStar的设计，随后提出了两种索引策略：全局 MWStar 和局部 MWStar，并通过理论分析证明了局部 MWStar 在密度上限方面的优势。
 此外，本章还提出了针对数据图的图压缩策略，详细阐述了该策略的过滤机制以及压缩后的压缩图结构。
 最后介绍了如何将图压缩策略与轻量级索引 MWStar 相结合。
 

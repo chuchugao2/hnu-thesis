@@ -8,10 +8,10 @@
 	此外，许多现实世界中的图是加权图，如支付网络，其中每条边的权重代表交易金额。
 	在分析过程中，边的权重通常对匹配结果的优先级产生重要影响。然而，现有的CSM方法大多忽略了这一因素，未能有效地将边权引入优化策略。
 
-	针对上述问题，本文提出了一个新的研究问题——CSM-TopK，即在动态加权图中计算查询图的前k个密度最高的匹配结果，并证明该问题为NP难问题。本文的主要贡献如下：
+	针对上述问题，本文提出了一个新的研究问题——CSM-TopK，即在动态加权图中计算查询图的前k个密度最高的匹配结果，并证明该问题为NP难问题。本文的主要工作如下：
 	\begin{enumerate}[label=(\arabic*)]  
 	\item 为了有效解决CSM-TopK问题，我们首先定义了一种星形结构子图，并通过查询图匹配序列中节点的一阶邻居关系来导出该星形子图。
-	\item 在星形结构子图的基础上，我们设计了两种轻量级索引，分别为全局MWstar索引和局部MWstar索引。具体而言，全局MWstar维护每个特定星形结构子图的最大权重，并在子图搜索的过程中保持不变，利用该最大权重，我们可以提前计算匹配子图的最大密度上限，从而进行剪枝，减少搜索空间，提高子图匹配的效率。
+	\item 在星形结构子图的基础上，我们设计了两种轻量级索引，分别为全局MWstar索引和局部MWstar索引。具体而言，全局MWstar维护每个特定星形结构子图的最大权重，利用该最大权重，我们可以提前计算匹配子图的最大密度上限，从而进行剪枝，减少搜索空间，提高子图匹配的效率。
 	而局部MWstar则根据每个特定数据顶点的最大权重分布动态维护索引，其最大权重的密度上限更加紧凑，因此能够更快地减少不必要的计算。
 	\item 为了进一步提高性能，本文还引入了一种查询相关的图压缩技术，该技术利用标签过滤方式过滤不可能的候选点，从而生成针对此查询图的压缩图。由于压缩图的规模远小于数据图，在此基础上进行星形结构索引的初始化以及更新，显著降低了匹配子图的密度上限，从而提高了整体的时间和空间效率。
   	\end{enumerate}
@@ -37,7 +37,7 @@
 	\begin{enumerate}[label=(\arabic*)]  
 		\item To efficiently solve the CSM-TopK problem, we first define a star-structured subgraph, which derives the star-structured subgraph using the first-order neighborhood relationships of the vertices in the query graph’s matching order.
 		\item Based on the star-structured subgraph of the query graph, we design two lightweight indexes, namely the Global MWstar Index and the Local MWstar Index. 
-		Specifically, the Global MWstar maintains the maximum weight of each specific star-structured subgraph, which remains unchanged during subgraph search. 
+		Specifically, the Global MWstar maintains the maximum weight of each specific star-structured subgraph. 
 		Using this maximum weight, we can compute the upper bound of the maximum density for the matching subgraph in advance, enabling pruning to reduce the search space and improve matching efficiency. 
 		In contrast, the Local MWstar dynamically maintains the index based on the maximum weight distribution of each specific data vertex. 
 		Its maximum weight density upper bound is more compact, allowing for faster reduction of unnecessary computations.

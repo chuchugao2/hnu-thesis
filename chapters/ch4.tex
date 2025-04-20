@@ -56,7 +56,7 @@
 考虑一个部分匹配$g^i=\{v_1, v_2, \cdots, v_i\}$，在匹配序列$\Phi$下，它匹配查询$q^i=\{u_1, u_2, \cdots, u_{i}\}$。
 对于查询顶点$u_{i^\prime}$（$1 \leq i^\prime \leq i$），
 假设$Qstar(i^\prime) = \{u_{x_1}, u_{x_2}, \cdots, u_{x_j}\}$（$j = |LN(u_{i^\prime})|$）。
-对于$g^i$的子图$g^\prime = {v_{x_1}, v_{x_2}, \cdots, v_{x_j}}$（即$g^\prime \subseteq g^i$），如果$g^\prime$匹配$Qstar(i^\prime)$，且每个$v_{x_{j^\prime}}$映射到$u_{x_{j^\prime}}$（$1 \leq i^\prime \leq i$），则我们称$g^\prime$为$g^i$中在$u_{i^\prime}$下的星形部分匹配，记作$Dstar_{\Phi}(g^i, i^\prime)$。
+对于$g^i$的子图$g^\prime = \{v_{x_1}, v_{x_2}, \cdots, v_{x_j}\}$（即$g^\prime \subseteq g^i$），如果$g^\prime$匹配$Qstar(i^\prime)$，且每个$v_{x_{j^\prime}}$映射到$u_{x_{j^\prime}}$（$1 \leq i^\prime \leq i$），则我们称$g^\prime$为$g^i$中在$u_{i^\prime}$下的星形部分匹配，记作$Dstar_{\Phi}(g^i, i^\prime)$。
 当上下文明确时，我们也可以简化为$Dstar(g^i, i^\prime)$。
 图\ref{fig:dstar}展示了在匹配$g=\{v_1, v_2, v_8, v_{1001}\}$时的$Dstar(g, 3)$和$Dstar(g, 4)$的示例。
 
@@ -231,7 +231,7 @@
      
      为了提高效率，我们采取了另一种策略：始终记录 $A_{G_t, Qstar(i)}$ 中的部分匹配 $g^\prime$，它的密度为$den(Qstar(i))$（见算法 \ref{alg:base-mwstar:update} 第\ref{code:record-denest}行）。
      因此，当 $(v_1, v_2) \notin E_{g^\prime}$ 时，我们可以避免重新计算 $den(Qstar(i))$ 的高开销（见算法 \ref{alg:base-mwstar:update}  第 \ref{code:not-hit-return:begin}-\ref{code:not-hit-return:end}行）。
-     通常，重新计算的概率是 $|E_{g^\prime}|/|E_{G_t}|$，即 $|LN(u_{i_2})|/|E_{G_t}|$。
+     通常，重新计算的概率是 $|E_{g^\prime}|/|E_{G_t}|$，即 $|LN(u_{i_2})|/|E_{G_t}|$,显然这个概率是非常小的。
      因此，重新计算的平均开销是 $O(|E_{G_t}|)*(|LN(u_{i_2})|/|E_{G_t}|)$，即 $O(|LN(u_{i_2})|)$。
      由于存在 $|E_Q|$ 种匹配序列，每次删除操作的平均开销为 $O(|E_Q|*|LN(u_{i_2})|)$。
          
@@ -253,12 +253,18 @@
 在全局 MWstar 中，对于每种匹配顺序 $\Phi$，我们维护不同子查询 $Qstar(i)$（$1\leq i\leq |V_Q|$）下星形结构部分匹配的最大权重。
 而在局部 MWstar 中，我们针对每个特定的数据顶点维护类似的最大权重分布。
 
-具体而言，给定匹配序列 $\Phi$ 和子查询 $Qstar(i)$，对于每个数据图中的顶点 $v$，我们维护所有匹配 $Qstar(i)$ 并且 $v$ 映射到 $u_i$ 的部分匹配 $g^\prime$ 的最大密度，记作 $den(Qstar(i), v)$ 。
+具体而言，给定匹配序列 $\Phi$ 和子查询 $Qstar(i)$的条件下，针对数据图中的每个顶点 $v$，需维护所有满足以下条件的部分匹配 $g^\prime$ 的最大密度的完全匹配。那么，我们可以得出结论：
+
+（1）$v \in V_g^{\prime}$($v$ 属于$g^{\prime}$的顶点集合)
+
+(2) $g^{\prime}$能够完全匹配$Qstar(i)$ ，且在该匹配中顶点$v$被映射到查询顶点$u_i$
+% 我们维护所有匹配 $Qstar(i)$ ，其中 $v$ 映射到 $u_i$ 的部分匹配 $g^\prime$ 的最大密度，记作 $den(Qstar(i), v)$ 。
+
 例如，在图 \ref{fig:csm-topk} 中的运行示例，其中 $v_5$ 和相应的子查询 $Qstar(3)$（如图 \ref{fig:qstar} 所示）。存在两个子图,匹配 $Qstar(3)=\{u_1, u_2, u_3\}$，其中 $v_5$ 映射到 $u_3$：
 
      （1）$g_1^\prime=\{v_1, v_2, v_5\}$，密度 $den(g_1^\prime) = 40$
 
-     （2）$g_2^\prime=\{v_1, v_3, v_5\}$，密度 $den(g_2^\prime) = 50$。
+     （2）$g_2^\prime=\{v_1, v_3, v_5\}$，密度 $den(g_2^\prime) = 50$
 
 由于 $den(g_1^\prime)= 40 < den(g_2^\prime)=50$，因此我们设定 $den(Qstar(3), v_5) = 50$。
 
@@ -296,9 +302,9 @@ $g^{i+1}\in$ $g^i\times C_{g^i}(u_{i+1})$
 此外，我们提出以下引理 \ref{lemma:local-candidate-set}，它对于设计CSM-TopK 搜索策略至关重要。
 
 \begin{lemma} \label{lemma:local-candidate-set}
-    假设 $g^i=$ \{$v_1, v_2$, $\cdots, v_i$\} 是匹配 $q^i$的部分匹配.
+    假设 $g^i=$ \{$v_1, v_2$, $\cdots, v_i$\} 是匹配 $q^i$的部分匹配。
     若 $g=\{v_1, v_2, \dots, v_{|V_Q|}\}$ 是包含 $g^i$ 的完全匹配，则对于 $V_g\setminus V_{g^i}$ 中的每个 $v_j$，若 $v_j$ 对应查询顶点 $u_j$，那么必然有：
-       $v_j\in$ $C_{g^i}(u_j)$.
+       $v_j\in$ $C_{g^i}(u_j)$。
     \end{lemma}
 
 \begin{proof}
@@ -443,7 +449,7 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 \end{itemize}
 如果 $g^i$ 未被剪枝，则可以利用已经计算好的可行候选集 $C_{g^i}(u_{i+1})$ 将 $g^i$ 扩展为若干个 $g^{i+1}$，继续递归搜索。
 
-对于每个 $g^{i+1} = g^i \cup {v_{i+1}}$，其中 $v_{i+1} \in C_{g^i}(u_{i+1})$，我们将按以下方式更新每个 $u_j$（$j > i+1$）的局部候选集：
+对于每个 $g^{i+1} = g^i \cup \{v_{i+1}\}$，其中 $v_{i+1} \in C_{g^i}(u_{i+1})$，我们将按以下方式更新每个 $u_j$（$j > i+1$）的局部候选集：
 如果 $u_j \notin RN(u_{i+1})$，则无需执行任何操作；否则，如果 $u_j \in RN(u_{i+1})$（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:formal-each-rn:begin}-\ref{code:formal-each-rn:end} 行）：
 \begin{itemize}
 \item 如果 $u_j$ 的局部候选集未定义，则基于访问性的过滤将 $C_{g^{i+1}}(u_j)$ 设置为 $N_{G_t}^{L(u_j)}(v_{i+1})$，即 $v_{i+1}$ 的邻居的标签都为 $L(u_j)$。
@@ -610,7 +616,7 @@ $v_i$匹配$u_j$，并且对于任何标签$l$（在$L_Q$下，而不是$\cL_{\c
 设 $f$ 表示从 $V_{\cQ}$ 到 $V_{\cg}$ 的双向映射，即 $f(u_x) = \tau_x$ （$1\leq x\leq |V_Q|$）。
 我们可以构建一个从 $V_{\cg}$ 到集合 \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 的映射 $f^{\prime}$，其中 $f^{\prime}(\tau_x) = v_{i_x}$。
 由于我们在搜索 $\cg$ 时应用了访问扩展，确保对于任意 $1\leq x<y\leq |V_Q|$，$v_{i_x} \neq v_{i_y}$， $f^{\prime}$ 也是双射的。
-因此，设新的映射 $f^{new} = f \cdot f^\prime$，那么 $f^{new}$ 将是 $V_Q$ 和满足子图匹配约束的集合 \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 的双射映射。
+因此，设新的映射 $f^{new} = f \cdot f^\prime$，那么 $f^{new}$ 将是 $V_Q$ 和满足子图匹配约束的集合 \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 的双向映射。
 \end{proof}
 定理 \ref{theorem:reduce-correctness} 保证了我们在压缩图上的搜索的正确性。
 
@@ -696,9 +702,9 @@ $v_i$匹配$u_j$，并且对于任何标签$l$（在$L_Q$下，而不是$\cL_{\c
 
 \section{本章小结}
 本章针对动态图中TopK连续子图匹配问题，提出了一种基于星形结构密度索引的高效解决方案。
-首先，我们首先设计了全局MWstar索引，通过维护星形子结构的最大权重，提供了部分匹配的粗粒度密度上界 $gBound$。
-接着，创新性地提出了局部MWstar索引，结合候选集的交运算缩小候选集合的大小，从而构建了更加紧凑的密度上界 $lBound$，显著减少了无效搜索空间。
-更为重要的是，该索引方法具有轻量级特点，能够在常数时间内完成更新，并保持线性空间复杂度。
-为进一步提升系统性能，本章还提出了动态压缩图技术。
-通过NLF过滤策略，构建了规模更小的压缩图，并在该压缩图中维护了由星形结构索引构建的局部MWstar索引，使得压缩图更加紧凑。
+首先，设计了全局MWstar索引，通过维护星形子结构的最大权重，提供了粗粒度的密度上界 $gBound$。
+接着，进一步提出了局部MWstar索引，结合候选集的交集运生成更加紧凑的密度上界 $lBound$，显著减少了无效搜索空间。
+且该索引方法具有轻量级特点，能够在常数时间内完成更新，并保持线性空间复杂度。
+此外提升系统性能，还提出了动态压缩图技术。
+通过NLF过滤策略构建了规模更小的压缩图，并在其中维护局部MWstar索引，使得压缩图更加紧凑。
 这样既保证了搜索结果的正确性，又显著提高了子图匹配的搜索效率。
