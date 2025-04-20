@@ -50,7 +50,6 @@
 其包含顶点$LN(u_i) \cup \{u_i\}$以及连接$u_i$与其左邻居的边，即：$V_{Qstar_{\Phi}(u_i)} = LN(u_i) \cup \{u_i\}$，$E_{Qstar_{\Phi}(u_i)} = \{(u_i, u_j)\ |\ u_j\in LN(u_i)\}$。
 当上下文清晰时，我们可以用$Qstar(i)$表示相应的子图。
 \end{definition}
-
 图\ref{fig:qstar}展示了在匹配序列为\{$u_1$, $u_2$, $u_3$, $u_4$\}时，$Qstar(3)$和$Qstar(4)$的示例。
 
 考虑一个部分匹配$g^i=\{v_1, v_2, \cdots, v_i\}$，在匹配序列$\Phi$下，它匹配查询$q^i=\{u_1, u_2, \cdots, u_{i}\}$。
@@ -65,31 +64,24 @@
 
 接下来我们讨论全局MWstar索引的构建与应用。
 对于查询$Q$的一个子查询$q^i$，在匹配序列$\Phi$下，$q^i$可以被分解为一系列的星型子图$Qstar(i^\prime)$（$1 \leq i^\prime \leq i$），即：
-
 \[
 	q^i = Qstar(1)\cup Qstar(2) \cdots \cup Qstar(i)
 \]
-
 实际上，对于任何两个查询顶点$u_{i_1}$和$u_{i_2}$（$i_1 \neq i_2$），根据星形子图的定义，有$E_{Qstar(i_1)} \cap E_{Qstar(i_2)} = \emptyset$。
 对于匹配$q^i$的部分匹配$g^i$，通过这种分解方式，我们可以相应地将$g^i$分解为：
-
 \begin{equation} \label{equation:dstar-decompose}
     g^i = Dstar(g^i, 1)\cup Dstar(g^i, 2) \cdots \cup Dstar(g^i, i)
 \end{equation}
-
 其中$Dstar(g^i, i^\prime)$匹配$Qstar(i^\prime)$（$1 \leq i^\prime \leq i$），并且对于$1 \leq i_1 < i_2 \leq i$，$E_{Dstar(g^i, i_1)} \cap E_{Dstar(g^i, i_2)} = \emptyset$。
 
 通过对$g^i$的分解，我们可以计算其密度，如下所示：
 \[
 	den(g^i) = \sum\nolimits_{1\leq i^\prime\leq i} \left(den(Dstar(g^i,i^\prime))\right)
 \] 
-
 我们使用$den(Qstar(j))$来表示$Qstar(j)$的最大匹配权重，即：
 \[
 	den(Qstar(j)) = \max\nolimits_{g^\prime \in A_{G_t, Qstar(j)}} \left(den(g^\prime)\right)
 \]
-
-
 基于此，我们可以提出以下定理，用于设计基于全局MWstar的剪枝策略。
 
 \begin{algorithm}[h!]
@@ -138,9 +130,7 @@
     \end{aligned}
   \end{equation*}
   \end{proof}
-
 接下来我们给出相应密度的上界，以及利用密度上界进行递归搜索的过程。
-
 
 
 \textbf{密度的上界}。 根据定理 \ref{theorem:global-mwstar}，对于每一个部分匹配 $g^i$，我们可以得到包含 $g^i$ 的完全匹配的密度上界，记作 $gBound_{G_t, Q, \Phi}(g^i)$，该上界表示对应星形子图中部分匹配的最大密度：
@@ -295,9 +285,7 @@
 \end{definition}
 
 
-根据定义 \ref{def:local-candidate-set}，我们可以看到$C_{g^i}(u_{i+1})$ 恰好是查询顶点 $u_{i+1}$ 最大的可行候选集，用于将 $g^i$ 扩展为一系列新的 $g^{i+1}$，即：
-
-$g^{i+1}\in$ $g^i\times C_{g^i}(u_{i+1})$
+根据定义 \ref{def:local-candidate-set}，我们可以看到$C_{g^i}(u_{i+1})$ 恰好是查询顶点 $u_{i+1}$ 最大的可行候选集，用于将 $g^i$ 扩展为一系列新的 $g^{i+1}$，即：$g^{i+1}\in$ $g^i\times C_{g^i}(u_{i+1})$。
 
 此外，我们提出以下引理 \ref{lemma:local-candidate-set}，它对于设计CSM-TopK 搜索策略至关重要。
 
