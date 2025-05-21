@@ -1,4 +1,4 @@
-\chapter{基于 TopK 密度剪枝的连续子图匹配问题}
+\chapter{密度约束下的TopK连续子图匹配问题}
 \label{ch3}
 本章基于我们提出的新问题——密度约束下的TopK连续子图匹配问题，提出了TopK密度剪枝的基线方法。首先阐述了目前连续子图匹配研究中缺乏与密度有效结合的工作，然后给出了问题的定义以及相关定理的证明，
 接着详细描述了CSM-TopK的基础框架以及密度剪枝策略的基线方案，并分析基于密度的剪枝的技术挑战，然后提出本文的核心思想。
@@ -15,7 +15,6 @@
 
 为此，提出了连续子图匹配（Continuous Subgraph Matching, CSM）问题，即在动态图中，通过增量更新的方式维护子图匹配结果，避免每次图结构发生变化时重新计算整个匹配过程。
 CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效，特别是在处理大规模图数据时，该方法能够显著减少不必要的重复计算，进而提高图数据处理的效率。
-
 尽管连续子图匹配（CSM）问题已得到初步关注，但现有研究主要集中在如何实现匹配结果的增量更新和提高计算效率。
 然而，在动态图中，如何根据优先级筛选出最重要的子图匹配结果仍是一个未被充分探讨的问题。
 在许多应用场景中，子图匹配结果往往是有优先级的。
@@ -66,40 +65,58 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
     \begin{definition}[子图密度]\label{def:subgraph-density}
 
     对于子图$g$，其密度$den(g)$定义为边权总和：
-    \[
+    \begin{equation}\label{euq:dense_g}
         den(g) = \sum\nolimits_{(v_1,v_2)\in g}\left(W_{v_1,v_2}\right)
-    \]
+    \end{equation}
     
     由于匹配子图的顶点数和边数固定，因此该密度定义等价于图的平均边权定义。
     故子图$g$的密度即为其边的权重之和。
     \end{definition}
     
-    \begin{figure}[h!]
+    \begin{figure}
+        \def\wscorevone{0.49\linewidth}
         \centering
-        \resizebox{0.9\linewidth}{!}{
-            \includegraphics{\csmfolder e_csm_topk_exmaple.pdf}
-        }
-        \caption{CSM-TopK示例（$k=3$，$o_t=<+,v_{1},v_{2}>$）}
-        \label{fig:csm-topk}
+        \begin{subfigure}[h!]{0.59\linewidth}
+            \centering
+            \includegraphics[height=9.5cm]{\figs e_csm_topk_exmaple_d.pdf} % valign=t 顶部对齐
+            \caption{数据图$G_t$}
+            \label{fig:example_data_graph}
+        \end{subfigure}
+        \hspace{-0.1cm} % 减小左右子图之间的间距
+      % 右侧嵌套竖排子图
+      \begin{subfigure}[t]{0.39\linewidth}
+        \centering
+        \begin{subfigure}[t]{\linewidth} % 右侧上方子图（交通拥堵模式）
+          \centering
+          \includegraphics[width=\linewidth, height=4cm, keepaspectratio]{\figs e_csm_topk_exmaple_q.pdf} % 固定高度对齐
+          \caption{查询图$Q$}
+          \label{fig:example_query_graph}
+        \end{subfigure}
+        \\[2.5em] % 上下间距调整
+        \begin{subfigure}[t]{\linewidth} % 右侧上方子图（交通拥堵模式）
+            \centering
+            \includegraphics[width=\linewidth, height=2.5cm, keepaspectratio]{\figs e_csm_topk_exmaple_r.pdf} % 固定高度对齐
+            \caption{结果}
+            \label{fig:example_result}
+          \end{subfigure}
+      \end{subfigure}
+      \caption{CSM-TopK应用示例}
+      \label{fig:csm-topk}
     \end{figure}
-    
     \begin{definition}[CSM-TopK问题]\label{def:problem-definition}
     给定动态图$\iG=(G_0, \Delta)$、查询图$Q$和参数$k$，对于每个更新操作$o_t\in \Delta$，要求报告当前图$G_t$中满足$Q$匹配条件的前$k$个最密子图集合$A_{t}^k= \{g_1, g_2, \ldots, g_k\}$，其中$A_t^k\subseteq A_t$。
     \end{definition}
-    
     如图\ref{fig:csm-topk}所示，给定$k=3$的一个CSM-TopK案例：
-    应用操作$o_t=<+,v_1, v_2>$于$G_{t-1}$，得到$G_t$（图\ref{fig:csm-topk}a），
-    查询图$Q$（图\ref{fig:csm-topk}b）由四个查询顶点$\{u_1, u_2, u_3, u_4\}$组成，标签分别为$A,B,C,D$，且按照
+    应用操作$o_t=<+,v_1, v_2>$于$G_{t-1}$，得到$G_t$（图\ref{fig:example_data_graph}），
+    查询图$Q$（图\ref{fig:example_query_graph}）由四个查询顶点$\{u_1, u_2, u_3, u_4\}$组成，标签分别为$A,B,C,D$，且按照
     $\{u_1, u_2, u_3, u_4\}$的匹配顺序进行子图匹配。
-    最后，从$G_t$中的数千个子图匹配结果中筛选出前$k$个最密子图（$k=3$，图\ref{fig:csm-topk}c），
+    最后，从$G_t$中的数千个子图匹配结果中筛选出前$k$个最密子图（$k=3$，图\ref{fig:example_result}），
     $g_0=\{v_1, v_3, v_4, v_9\}$，$g_1=\{v_1, v_3, v_5, v_9\}$，$g_1=\{v_1, v_3, v_6, v_9\}$，密度分别为180，150，140。
-    
     \begin{theorem} \label{theorem:np-hard}
     CSM-TopK属于NP难问题
     \end{theorem}
     \begin{proof}
     通过将图$G$的最大团计算问题~\cite{clique-DBLP:journals/eor/WuH15}归约到CSM-TopK：
-   
     在图$G$上随机生成插入操作，形成一个动态图；
     然后对顶点数从1到$|V_G|$的完全图查询执行CSM-TopK搜索（$k=1$）；
     CSM-TopK返回的最大规模的匹配正是$G$中的最大团。
@@ -112,7 +129,7 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 \label{ch3:base-framework}
 在具有TopK密度约束的连续子图匹配问题上，若要正确且快速的获取top-k子图匹配结果，必须满足以下几个关键条件：
 
-（1）首先，我们需要设计一个高效的密度索引结构，以加速 top-k 子图匹配的搜索过程。
+（1）我们需要设计一个高效的密度索引结构，以加速 top-k 子图匹配的搜索过程。
 每次的图更新可能引入细微的变化，因此该索引结构需要在动态环境下保持高效性，避免每次更新时重新计算所有匹配。
 
 （2）密度索引结构应在时间和空间成本上都保持轻量，并且易于更新。
@@ -127,7 +144,6 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 
 给定动态图$\iG=(G_0, \Delta)$和查询图$Q$，我们假设$A_0^k$已预先计算完成。对于每个操作$o_t$，我们关注在已获得$A_{t-1}^k$的情况下，如何计算$A_t^k$。
 已知图$G_{t-1}$、对应的$A_{t-1}^k$以及操作$o_t=(op, v_1, v_2)$。
-
 若$o_t$为边插入操作（即$op=+$），则只需计算新排序的前$k$个匹配，这些结果可与$A_{t-1}^k$合并得到$A_t^k$。显然，每个新匹配$g$必须包含更新边$(v_1, v_2)$且满足$g\in A_t^k\setminus A_{t-1}^k$。
 若$o_t$为边删除操作（即$op=-$），则$A_{t-1}^k$中包含$(v_1, v_2)$的结果将失效。假设删除边$(v_1, v_2)$导致$k^\prime$个结果过期，则需从$G_t$中搜索$k^\prime$个未在$A_{t-1}^k$中出现的高密度匹配进行补充。
 每个补充匹配$g^\prime$必须满足$g^\prime \in A_{t-1} \setminus A_{t-1}^k$。
@@ -164,8 +180,8 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 		设$\Phi$为从$u_1,u_2$为起始点的匹配序列\\
         \If{$op = +$}{ \label{code:base-ins:begin}
             \ForEach{$(u_1,u_2)\in E_{Q_t}$\ 匹配\ $(v_1, v_2)$} { 
-                设$g^2=\{v_1,v_2\}$, 并将$v_1$,$v_2$设置为已访问\\
-				FindDenseMatches$(G_t,Q,\Phi,g^2, A_t^k,k)$ \label{code:baseline:end} \\
+                设$g^2=\{v_1,v_2\}$, 并将$v_1$,$v_2$设置为已访问\\ \label{code:match-vertex}
+				$\mathrm{FindDenseMatches}$($G_t$,$Q$,$\Phi$,$g^2$, $A_t^k$,$k$) \label{code:baseline:end} \\
                 /*详细见算法\ref{alg:find-dense-matches}*/  \label{code:base-ins:end}
             }
         }
@@ -175,7 +191,7 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
                 \ForEach{$(v_{i_1},v_{i_2})\in E_{G_{t}}$}{
                         \ForEach{$(u_1,u_2)\in E_{Q}$\ 匹配\ $(v_{i_1},v_{i_2})$}{
                              设$g^2=\{v_{i_1},v_{i_2}\}$并且将$v_{i_1}$, $v_{i_2}$设置为已访问  \\
-                             FindDenseMatches$(G_t,Q,\Phi,g^2, A_t^k, k)$\\
+                             $\mathrm{FindDenseMatches}$($G_t$,$Q$,$\Phi$,$g^2$, $A_t^k$, $k$)\\
                              将$v_{i_1}$、$v_{1i_2}$设置为未访问\label{code:base-del:end} 
                         }
                 }
@@ -186,9 +202,7 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 \end{algorithm}
 
 综合上述，我们可以得出结论，该CSM-TopK框架主要用于增量计算边插入操作后的匹配，并在边删除操作后补充失效的匹配来维持有效的top-k子图匹配的搜索过程。
-这种增量更新的方式使得CSM-TopK能够高效地处理动态图中的子图匹配问题，避免了每次操作都重新计算所有可能的匹配，从而显著提升了算法的效率。
-
-如果没有引入密度剪枝策略，该问题就转化为“rank after matching”问题。这种情况下，我们必须考虑所有可能的匹配结果，并对其进行排序，最后选出排名前$k$的结果。
+这种增量更新的方式使得CSM-TopK能够高效地处理动态图中的子图匹配问题，避免了每次操作都重新计算所有可能的匹配，从而显著提升了算法的效率。如果没有引入密度剪枝策略，该问题就转化为“rank after matching”问题。这种情况下，我们必须考虑所有可能的匹配结果，并对其进行排序，最后选出排名前$k$的结果。
 这种方法虽然能够解决问题，但在计算上会非常昂贵，尤其是在数据图规模较大，查询图复杂度较高时。没有密度限制的情况下，匹配的空间会急剧扩大，导致计算时间和空间消耗大幅增加。
 因此，虽然当前主流的连续子图匹配算法，如Rapidflow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22}, CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}, GraphFlow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17}等均可应用这一基础框架解决本文的研究问题，但其整体的效率并不高。
 
@@ -215,11 +229,8 @@ WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/
 
 例如，在图 \ref{fig:csm-topk}b 中，匹配序列为 $\{u_1, u_2, u_3, u_4\}$，则：$LN(u_3) = \{u_1, u_2\}$，表示$u_3$的左邻居是$u_1$和$u_2$。这一结构对于后续的匹配扩展至关重要，因为它决定了如何从当前部分匹配出发，寻找可能的匹配扩展。
 
-定义了左/右邻居之后，我们可以考虑如何在 WCOJ 策略下扩展部分匹配。
-
-为了更直观地理解这一过程，假设当前部分匹配 $g^i = \{v_1, v_2, \cdots, v_i\}$，它匹配查询子图 $q^i = \{u_1, u_2, \cdots, u_i\}$，其中 $\Phi = \{u_1, u_2, \cdots, u_{|V(Q)|}\}$，对 $g^i$ 的扩展是计算所有满足 $g^i \subset g^{i+1}$ 且 $g^{i+1}$ 匹配 $q^{i+1}$ 的 $g^{i+1}$ 的集合。
+定义了左/右邻居之后，我们可以考虑如何在 WCOJ 策略下扩展部分匹配。为了更直观地理解这一过程，假设当前部分匹配 $g^i = \{v_1, v_2, \cdots, v_i\}$，它匹配查询子图 $q^i = \{u_1, u_2, \cdots, u_i\}$，其中 $\Phi = \{u_1, u_2, \cdots, u_{|V(Q)|}\}$，对 $g^i$ 的扩展是计算所有满足 $g^i \subset g^{i+1}$ 且 $g^{i+1}$ 匹配 $q^{i+1}$ 的 $g^{i+1}$ 的集合。
 令 $C_{g^{i}}(u_{i+1})$ 表示在 $g^i$ 上 $u_{i+1}$ 的最大可行候选集，其中 $g^i \times C_{g^{i}}(u_{i+1})$ 正是所有满足 $g^i \subset g^{i+1}$ 且 $g^{i+1}$ 匹配 $q^{i+1}$ 的 $g^{i+1}$ 集合。
-
 此外，令 $N_{G_t}^l(v) \subseteq N_{G_t}(v)$ 表示图 $G_t$ 中标签为 $l$ 的顶点 $v$ 的邻居集合。
 那么，通过 WCOJ，我们可以通过对已访问的顶点进行交集和过滤来计算 $C_{g^{i}}(u_{i+1})$（算法 \ref{alg:find-dense-matches} 中第 \ref{code:base-intersect:start} 行至第 \ref{code:base-intersect:end} 行）：
 \begin{equation} \label{equation:wcoj-intersection}
@@ -230,9 +241,9 @@ WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/
 
 在图 \ref{fig:csm-topk} 中，以 $o_t = (+,v_1,v_2)$，$\Phi = \{u_1,u_2,u_3,u_4\}$为例，搜索从 $g^2 = \{v_1,v_2\}$ 开始，且已知 $LN(u_3) = \{u_1, u_2\}$。
 将部分匹配 $g^2$ 扩展为一系列 $g^3$ 时，我们会计算最大候选集 $C_{g^{2}}(u_3)$，如下所示：
-\[
+\begin{equation}\label{equation:wcoj-example}
 	C_{g^{2}}(u_{3}) =  N_{G_t}^{L(u_{3})}(v_{1})\cap N_{G_t}^{L(u_{3})}(v_{2})  \setminus \{v_1, v_2\}
-\]
+\end{equation}
 因此，$C_{g^{2}}(u_3) = \{v_5, v_6, v_7, v_8\}$，我们可以将 $g^2$ 扩展为 $g^3 = g^2 \cup \{v\}$，其中每个 $v$ 属于 $C_{g^{2}}(u_3)$。
 
 上述是通过WCOJ策略来加速部分匹配的的具体扩展过程。
@@ -251,7 +262,7 @@ WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/
 	\caption{密集子图递归搜索过程}
 	\label{alg:find-dense-matches}
 	\SetKwBlock{iFunc}{Procedure}{End Procedure}
-	\iFunc(FindDenseMatches{(}$G_t, Q, \Phi, g^i, A, k${)})
+	\iFunc($\mathrm{FindDenseMatches}${(}$G_t, Q, \Phi, g^i, A, k${)})
 	{
 		\If{$|g^i| = |V_Q| \land g^i\notin A$}{
             设$g_{min}$为$A$中最小密度的匹配\\
@@ -267,12 +278,31 @@ WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/
 		$C_{g^i}(u_{i+1})= $ Intersect$(N_{i_1}, \cdots, N_{i_x})$ $\setminus V_{g^i}$  \label{code:intersect}  \label{code:base-intersect:end}\\
 		\ForEach{$v \in C_{g^i}(u_{i+1})$}{ \label{code:for-S-begin}
 			将$v$设置为已访问，并令$g^{i+1} = g^i\cup \{v\}$ \\
-			FindDenseMatches{(}$G_t, Q, \Phi, g^{i+1} , A, k${)} \\ 
+			$\mathrm{FindDenseMatches}${(}$G_t, Q, \Phi, g^{i+1} , A, k${)} \\ 
 			将$v$设置为未访问 \label{code:for-S-end}   \label{code:base-extension:end} \\
 		}
 		\Return 
 	}
 \end{algorithm}	
+\subsection{基线方案的时空复杂度分析}
+本文提出的基线方案核心思想是通过增量更新的方式，动态维护前 $k$ 个密度最高的子图匹配结果。由于离线计算阶段不在本文的比较范畴之内，因此本节不对其时空复杂度进行详细分析。
+
+算法\ref{alg:find-dense-matches}的时间复杂度呈指数增长。
+由于基线方案采取的是递归扩展策略来生成所有可能的子图匹配路径，并且在递归过程中没有任何的剪枝策略。
+因此，其复杂度主要受每个查询节点的候选集合大小影响。设查询图的节点数为$|V_Q|$,初始时已匹配两个节点（见算法\ref{alg:baseline:framework}第\ref{code:match-vertex}行 设置$g_2=\{v_1,v_2\}$），则需递归扩展剩余$k=|V_Q|-2$个节点。
+在无剪枝策略的情况下，每次递归需要扩展遍历数据图中所有可能的候选节点。假设数据图$G_t$的平均度为$d_t$，则每一层候选集规模为$O(d_t)$。那么，递归操作的总时间复杂度为
+$O(d_{t}^{k})=O(d_{t}^{|V_Q|-2})$。进一步分析，若数据图$G_t$趋近于完全图，其节点数近似为$|V_G|$，则$d_t$可达$O(|V_G|)$,此时算法的时间复杂度将退化为：$O(|V_G|^{|V_Q|-2})$。这一复杂度与子图同构问题的NP难特性一致，表明基线方案在大规模图数据中无法满足实时性的要求。
+
+此外，算法~\ref{alg:baseline:framework} 中的动态更新操作也带来了额外开销。对于插入和删除事件，均需重新调用算法~\ref{alg:find-dense-matches} 以生成新的匹配结果。对于插入操作，最坏情况下存在$|E_Q|$个匹配序列，每条序列都需要独立调用一次算法 \ref{alg:find-dense-matches} 以构建完整的子图匹配。因此，其最坏情况下其时间复杂度为$O(|E_Q||V_G|^{|V_Q|-2})$，平均时间复杂度为$O(|\overline{E_Q}|d_t^{|V_Q|-2})$。对于删除操作，若某个匹配结果过期，需补充$k^{\prime}$个新匹配，此时需扫描整个数据图 $G_t$ 的边集 $|E_{G_t}|$，最坏情况下的时间复杂度为$O(k' |E_{G_t}|  |E_Q|  |V_G|^{|V_Q|-2})$,平均时间复杂度为$O(k' |E_{G_t}|  |\overline{E_Q}| |d_t|^{|V_Q|-2})$。尽管\ref{alg:find-dense-matches}中引入了最坏情况最优连接（Worst-Case Optimal Join）策略，通过候选集交集操作（\ref{equation:wcoj-intersection}）缩小搜索空间，但在最坏情况下（如候选节点邻域极度稀疏或无重叠），交集后的候选集规模仍可能接近原图节点规模 $|V_G|$，导致搜索空间依旧庞大。
+
+基线方案的空间复杂度主要由递归栈的开销以及top-k匹配结果的存储需求共同决定。根据前述分析，递归的最大深度为 $|V_Q| - 2$。在平均情况下，每层递归所需维护的候选节点集大小约为数据图 $G_t$ 的平均度 $d_t$；在最坏情况下，每层候选集大小可达 $|V_G|$。因此，平均空间复杂度为$O(|V_Q|d_t)$,而最坏情况下的递归栈空间开销为$O(|V_Q||V_G|)$。此外，为维持 top-$k$ 个当前密度最高的匹配子图，系统需存储 $k$ 个完整的子图匹配结果。由于每个匹配子图包含 $|V_Q|$ 个节点和$|E_Q|$条边，其空间需求为$O(k|V_Q|+k|E_Q|)$。因此，整个系统的总平均空间复杂度为$O(d_t|V_Q|+k|V_Q|+k|E_Q|)=O(d_t|V_Q|)$。
+
+由此可见，在动态图场景下，基线方案在处理插入操作时效率较低，且删除操作通常需重新计算已失效的匹配结果，从而进一步恶化系统的整体性能。
+同时，其空间开销随着数据图规模的增长呈线性上升趋势，若缺乏有效的剪枝机制，极易导致内存资源枯竭。
+因此，本方案仅作为本文的基准对比方法，用于评估其他优化策略的有效性和优越性。
+
+
+
 
 \section{技术挑战与核心思想}
 本小节主要探讨了CSM-TopK框架中的技术挑战与核心思想。
@@ -321,10 +351,9 @@ WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/
 基于 MWstar 的密度上界函数在基于密度的剪枝中表现出显著的效果，且该函数仅需线性空间，能够在近乎常数级的时间内更新。
 
 此外，我们在每个 $G_t$ 之上维护了压缩图，以进一步提升性能。
-具体而言，我们首先在 $G_0$ 上构建压缩图 $\mathcal{G}0$，对于在$G_{t-1}$上应用的每次更新操作$o_t$（$t \geq 1$）形成$G_t$,
+我们首先在 $G_0$ 上构建压缩图 $\mathcal{G}0$，对于在$G_{t-1}$上应用的每次更新操作$o_t$（$t \geq 1$）形成$G_t$,
 在形成更新后的图$G_t$之后，我们将 $\mathcal{G}_{t-1}$ 也相应地转换为 $\mathcal{G}_t$。
 压缩图的构建和更新策略确保了其在后续计算中具有较高的效率。
-
 在 $\mathcal{G}_t$ 上运行 CSM-TopK，相较于直接在原始图 $G_t$ 上进行计算，具有更高的效率。
 一方面，压缩图上的 MWstar 占用的空间更少，更新时间也更短；
 另一方面，压缩图的使用可以减少对无关数据的访问，进一步提升计算效率。
@@ -335,7 +364,7 @@ WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/
 \begin{itemize}
 \item \textbf{CSM-TopK的基础框架}：构建离线预处理与在线更新相结合的计算框架。离线阶段通过静态子图匹配生成初始top-k结果；在线阶段针对边插入/删除操作，提出了新增匹配扩展与失效匹配补充的策略。
 
-\item \textbf{引入WOCJ机制与密度机制}：在递归搜索过程中引入最坏情况最优连接（WCOJ）技术，通过候选集交集运算优化匹配扩展。同时，提出基于第$k$个子图匹配结果构成的密度上界来进行粗略剪枝，减少无效子图匹配结果的存储。
+\item \textbf{引入WOCJ机制与密度机制}：在递归搜索过程中引入最坏情况最优连接策略，通过候选集交集运算优化匹配扩展。同时，提出基于第$k$个子图匹配结果构成的密度上界来进行粗略剪枝，减少无效子图匹配结果的存储。
 
 \item \textbf{创新方向提出}：针对上述瓶颈，提出本研究课题的技术挑战与核心思想，指明了提高计算效率的潜在途径。
 \end{itemize}    
