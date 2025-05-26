@@ -13,13 +13,15 @@
 
 \begin{document}
 \newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
-\newcommand{\labelfont}{20pt}
+\newcommand{\labelfont}{40pt}
 \begin{tikzpicture}
 \input{../tikz_HEAD}
 \begin{semilogyaxis}
 [
     ymin = 0,
     ymax=50000000,
+    width = 16 cm,
+   height = 14.5 cm,
  %   ymax=0.9,
  %   xmin = 0,
  %   xmax =110
@@ -37,29 +39,29 @@
  %    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
  %    legend pos= north east,
      legend cell align=left,
-     x label style = {font=\ptfont{\labelfont}},
-     ticklabel style = {font=\Large},
-     y label style = {inner sep=0pt,at={(axis description cs:-0.04,0.5)},font=\ptfont{\labelfont}},
+     x label style = {inner sep=0pt,at={(axis description cs:0.5,-0.1)},font=\ptfont{\labelfont}},
+    ticklabel style =  {font=\ptfont{30pt}},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.15,0.5)},font=\ptfont{\labelfont}},
      extra y ticks={50000000},
       extra y tick label={INF},
 ]
 
-\addplot [ourMark]
+\addplot [ourMark,mark size=10pt]
 coordinates {(\gNumone, 12183340 ) (\gNumtwo, 12658810 )  (\gNumthr,12998570)  (\gNumfor,13489210  )  (\gNumfiv,13847890  )};
 
-\addplot [graphflowMark]
+\addplot [graphflowMark,mark size=10pt]
 coordinates {(\gNumone, 17189490  ) (\gNumtwo, 17376380  )  (\gNumthr, 17889490 )  (\gNumfor, 18223940  )  (\gNumfiv,19276380  )};
 
-\addplot [rapidflowMark]
+\addplot [rapidflowMark,mark size=10pt]
 coordinates {(\gNumone, 20545600 ) (\gNumtwo,20883439  )  (\gNumthr, 21254586  )  (\gNumfor, 21763321  )  (\gNumfiv, 22873421  )};
 
-\addplot [caligMark]
+\addplot [caligMark,mark size=10pt]
 coordinates {(\gNumone, 23350667.43  ) (\gNumtwo, 24069862.27  )  (\gNumthr, 23479422.95 )  (\gNumfor,  26311767.64  )  (\gNumfiv,27770294.87  )};
 
-\addplot [instopkMark]
+\addplot [instopkMark,mark size=10pt]
 coordinates {(\gNumone, 50000000) (\gNumtwo,50000000 )  (\gNumthr, 50000000 )  (\gNumfor, 50000000 )  (\gNumfiv, 50000000 )};
 
-\addplot [pbsmMark]
+\addplot [pbsmMark,mark size=10pt]
 coordinates{(\gNumone, 32725400  ) (\gNumtwo, 35990485.92 )  (\gNumthr, 36428610.37  )  (\gNumfor, 38906904.7)  (\gNumfiv, 37221241.53  )};
 
 
@@ -71,20 +73,20 @@ coordinates{(\gNumone, 32725400  ) (\gNumtwo, 35990485.92 )  (\gNumthr, 36428610
 
 
 % \fixNum
-\begin{customlegend}[legend style={at={(3.55, 4.3) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\rf,\cg}]
-    \addlegendimage{rapidflowMark}
-    \addlegendimage{caligMark}
+\begin{customlegend}[legend style={at={(6.8, 9.3) ,font=\ptfont{\labelfont}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\rf,\cg}]
+    \addlegendimage{rapidflowMark,mark size=10pt}
+    \addlegendimage{caligMark,mark size=10pt}
 \end{customlegend}
 
-\begin{customlegend}[legend style={at={(3.3, 5.5) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf}]
-    \addlegendimage{ourMark}
-    \addlegendimage{graphflowMark}
+\begin{customlegend}[legend style={at={(6.3, 12.5) ,font=\ptfont{\labelfont}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf}]
+    \addlegendimage{ourMark,mark size=10pt}
+    \addlegendimage{graphflowMark,mark size=10pt}
 \end{customlegend}
 
 
-\begin{customlegend}[legend style={at={(2.85, 1.65) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\itk,\pm}]
-\addlegendimage{instopkMark}
-\addlegendimage{pbsmMark} 
+\begin{customlegend}[legend style={at={(5.3, 3.65) ,font=\ptfont{\labelfont}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\itk,\pm}]
+\addlegendimage{instopkMark, mark size=10pt}
+\addlegendimage{pbsmMark, mark size=10pt} 
 \end{customlegend}
 
 % \begin{customlegend}[legend style={at={(4.35, 0.8) ,font=\ptfont{10pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={ }]

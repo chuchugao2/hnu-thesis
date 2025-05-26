@@ -13,13 +13,15 @@
 
 \begin{document}
 \newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
-\newcommand{\labelfont}{20pt}
+\newcommand{\labelfont}{40pt}
 \begin{tikzpicture}
 \input{../tikz_HEAD}
 \begin{semilogyaxis}
 [
     ymin = 0,
     ymax=64000000,
+    width = 16 cm,
+    height = 14.5 cm,
     % ytick={10,1000,10000,100000,10000000}, % 手动设置刻度位置
     % yticklabels={$10^1$,$10^3$,$10^4$,$10^5$,$10^7$}, % 刻度标签
     point meta=rawy,
@@ -32,10 +34,10 @@
     xtick={\gKNumone, \gKNumtwo, \gKNumthr, \gKNumfor, \gKNumfiv},
 %    legend pos= north east,
     legend cell align=left,
-    x label style = {font=\ptfont{\labelfont}},
-    ticklabel style = {font=\Large},
-    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
-    legend style={at={(0.5, 0.45)},font=\ptfont{19pt},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
+    x label style = {inner sep=0pt,at={(axis description cs:0.5,-0.1)},font=\ptfont{\labelfont}},
+    ticklabel style = {font=\ptfont{\labelfont}},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.15,0.5)},font=\ptfont{\labelfont}},
+    legend style={at={(0.5, 0.45)},font=\ptfont{\labelfont},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
     legend cell align=left,
     legend columns = 2
     % extra y ticks={60000000},
@@ -43,22 +45,22 @@
     % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
 ]
 
-\addplot [ourMark]
+\addplot [ourMark,mark size=10pt]
 coordinates {(\gKNumone, 18.24724  ) (\gKNumtwo, 18.55274  )  (\gKNumthr, 19.73124  )  (\gKNumfor, 19.3189  )  (\gKNumfiv, 21.29434 )};
 
-\addplot [graphflowMark]
+\addplot [graphflowMark,mark size=10pt]
 coordinates {(\gKNumone, 26863.9761 ) (\gKNumtwo, 26587.7282 )  (\gKNumthr, 26519.6557 )  (\gKNumfor, 26853.2619)  (\gKNumfiv, 26557.956)};
 
-\addplot [rapidflowMark]
+\addplot [rapidflowMark,mark size=10pt]
 coordinates {(\gKNumone, 18332.56478 ) (\gKNumtwo, 18347.15814 )  (\gKNumthr, 18317.93278 )  (\gKNumfor, 18271.98052 )  (\gKNumfiv,18352.53584)};
 
-\addplot [caligMark]
+\addplot [caligMark,mark size=10pt]
 coordinates {(\gKNumone, 37036.2) (\gKNumtwo, 36461.69)  (\gKNumthr,37962.21)  (\gKNumfor,30784.94)  (\gKNumfiv,39977.67)};
 
-\addplot [instopkMark]
+\addplot [instopkMark,mark size=10pt]
 coordinates {(\gKNumone,  64000000) (\gKNumtwo, 64000000 )  (\gKNumthr, 64000000 )  (\gKNumfor, 64000000 )  (\gKNumfiv,64000000 )};
 
-\addplot [pbsmMark]
+\addplot [pbsmMark,mark size=10pt]
 coordinates{(\gKNumone,9524160 ) (\gKNumtwo, 9339749)  (\gKNumthr, 9136052 )  (\gKNumfor, 9005412 )  (\gKNumfiv, 8799210 )};
 
 \fixksizelegend

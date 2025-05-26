@@ -8,16 +8,13 @@
 	此外，许多现实世界中的图是加权图，如支付网络，其中每条边的权重代表交易金额。
 	在分析过程中，边的权重通常对匹配结果的优先级产生重要影响。然而，现有的CSM方法大多忽略了这一因素，即未能有效地将边权引入优化策略。
 
-	针对上述问题，本文提出了一个新的研究问题——CSM-TopK，即在动态加权图中计算查询图的前k个密度最高的匹配结果。本文的主要研究工作如下：
-	\begin{enumerate}[label=(\arabic*)]
-	\item CSM-TopK问题。本文首次提出CSM-TopK问题，此研究将TopK密度约束纳入动态加权图的连续子图匹配问题中，并且证明其是NP-Hard。
-	\item MWStar索引。为了有效解决CSM-TopK问题，本文提供了CSM-TopK的基础框架，并且定义了一种星形结构子图。
-	在星形结构子图的基础上，设计了两种轻量级索引，分别为全局MWstar索引和局部MWstar索引。具体而言，全局MWstar索引维护每个星形结构子图的最大权重，利用该最大权重，可以提前计算匹配子图的最大密度上限，从而进行剪枝，减少搜索空间，提高子图匹配的效率。
-	而局部MWstar索引则根据每个特定数据顶点的最大权重分布动态维护索引，其最大权重的密度上限更加紧凑，因此能够更快地剪枝，减少不必要的计算。
-	\item 图压缩技术。为了进一步提高性能，本文还引入了一种查询相关的图压缩技术，该技术利用标签过滤方式过滤不可能的候选点，从而生成针对此查询图的压缩图。由于压缩图的规模远小于数据图，在此基础上进行星形结构索引的初始化以及更新，显著降低了匹配子图的密度上限，从而提高了整体的时间和空间效率。
-  	\end{enumerate}
+	基于上述发现，本文提出了一个创新的问题：密度约束下的TopK连续子图匹配（CSM-TopK）。即在动态加权图中实时计算查询图的前$k$个密度最高的匹配结果。本文的具体工作和贡献如下：
+
+	（1） CSM-TopK问题定义与基线方案。本文创新性的提出了CSM-TopK问题，并将TopK密度约束纳入动态加权图的连续子图匹配问题中，且证明其是NP难问题。针对该问题，本文设计了一种适应于CSM-TopK的基线方案，并在该方案中引入密度优先级的概念，通过密度剪枝策略来提高计算效率。
+
+	（2） 基于压缩图的轻量级索引。为了有效解决CSM-TopK问题，本文定义了一种星形结构子图。在星形结构子图的基础上，设计了两种轻量级索引，分别为全局MWstar索引和局部MWstar索引。具体而言，全局MWstar索引维护每个星形结构子图的最大权重，可以提前计算匹配子图的最大密度上限，从而进行剪枝，提高子图匹配的效率。而局部MWstar索引则根据每个特定数据顶点的最大权重分布动态维护索引，其最大权重的密度上限更加紧凑，因此能够更快地剪枝。为了进一步提高性能，本文还引入了一种查询相关的图压缩技术，该技术利用标签过滤规则过滤不可能的候选点，从而生成针对此查询图的压缩图。由于压缩图的规模远小于数据图，在此基础上进行星形结构索引的初始化以及更新，显著降低了匹配子图的密度上限，从而提高了整体的时间和空间效率。
 	
-	通过在五个真实世界数据集上的广泛实验，结果表明，结合图压缩技术和MWstar索引的最终算法表现最佳，在插入/删除的时间效率上，该方法相比现有方法至少提高了两个数量级；在索引的空间效率以及时间效率上也远超其他方法。实验结果验证了本文提出解决方案的有效性。
+	基于五个真实世界数据集对本文提出的解决方案进行多组实验和评估，实验结果显示，结合图压缩技术和MWstar索引的最终算法表现最佳，在插入/删除的时间效率上，该方法相比现有方法至少提高了两个数量级；在索引的空间效率以及时间效率上也远超其他方法。实验结果验证了本文提出解决方案的有效性。
 
 	\keywords{连续子图匹配；动态图；剪枝策略；TopK密度}
 \end{abstract}
@@ -33,27 +30,16 @@
 	Moreover, many real-world graphs are weighted, such as payment networks, where each edge’s weight represents the transaction amount. 
 	During analysis, edge weights often significantly influence the priority of matching results. However, most existing CSM methods overlook this factor and fail to effectively incorporate edge weights into the optimization strategies.
 
-	
-	To address these challenges, the paper introduces a new problem called CSM-TopK, which aims to compute the top k matching results with the highest density for a given query graph on dynamic weighted graphs.
-	The main contributions are as follows:
-	\begin{enumerate}[label=(\arabic*)]  
-		\item CSM-TopK problem. We are the first to study CSM-TopK that incorporate TopK density constraints into
-		continuous subgraph matching over dynamic weighted graphs, and prove it to be NP-hard.
-		\item MWstar index. To efficiently solve the CSM-TopK problem, we propose a foundational framework and define a star-structured subgraph.
-		Based on the star-structured subgraph of the query graph, we design two lightweight indexes, namely the Global MWstar Index and the Local MWstar Index. 
-		Specifically, the Global MWstar index maintains the maximum weight of each star-structured subgraph. 
-		Using this maximum weight, we can compute the upper bound of the maximum density for the matching subgraph in advance, enabling pruning to reduce the search space and improve matching efficiency. 
-		In contrast, the Local MWstar index dynamically maintains the index based on the maximum weight distribution of each specific data vertex. 
-		Its maximum weight density upper bound are tighter, enabling faster pruning and eliminating redundant computations.
-		\item Query-dependent graph compact. To further enhance performance, we also introduce a query-dependent graph compacted technique. 
-		This technique uses label filtering to remove impossible candidate vertices, yielding the candidate subgraph specifically for the query graph. 
-		The size of the candidate subgraphs is significantly smaller than the original data graph. 
-		The initialization and updating of the star-structured index on the candidate subgraph substantially reduce the upper bound of the matching subgraph's density, thereby improving both time and space efficiency.
-		\end{enumerate}
+	Motivated by the above observations, the paper introduces a novel problem: Continuous Subgraph Matching with TopK Density Constraints (CSM-TopK). Specifically, the goal is to continuously identify the top-$k$ densest matches of a given query graph in a dynamic weighted graph. The main contributions of this work are as follows:
 
-		Extensive experiments on five real-world datasets demonstrate that the proposed method combining graph compression techniques and MWstar indexing performs the best. 
-		In terms of time efficiency for insertions/deletions, it outperforms existing comparison methods by at least two orders of magnitude. 
-		It also significantly exceeds other methods in both index space efficiency and time efficiency. 
-		These experimental results validate the effectiveness of the proposed solution.
+	(1) Problem Formulation and Baseline Solution for CSM-TopK. The paper formally defines the CSM-TopK problem and proves its NP-hardness. To address this challenge, the paper designs a baseline solution tailored to CSM-TopK by introducing the concept of density-based prioritization. A density pruning strategy is applied to significantly reduce the search space and improve computation efficiency.
+
+	(2) Lightweight Indexing Based on Compressed Graph. To efficiently solve the CSM-TopK problem, the paper define a star-structured subgraph and build two lightweight indexes upon it: the global MWStar index and the local MWStar index. Specifically,the global MWStar index maintains the maximum weight of each star-structured subgraph, enabling early computation of an upper bound of the maximum density for the matching subgraph in advance. This allows for effective pruning and accelerates the matching process.
+	In contrast, the Local MWstar index dynamically maintains the index based on the maximum weight distribution of each specific data vertex. Its maximum weight density upper bound are tighter, enabling faster pruning. To further enhance performance, the paper also introduce a query-dependent graph compacted technique. 
+	This technique uses label filtering to remove impossible candidate vertices, yielding the candidate subgraph specifically for the query graph. 
+	The size of the candidate subgraphs is significantly smaller than the original data graph. 
+	The initialization and updating of the star-structured index on the candidate subgraph substantially reduce the upper bound of the matching subgraph's density, thereby improving both time and space efficiency.
+
+	Extensive experiments and evaluations were conducted on five real-world datasets to validate the proposed solutions. The results demonstrate that the our-final algorithm combining compact graph compression technology and MWStar indexes achieves optimal performance: it improves insertion/deletion time efficiency by at least two orders of magnitude compared to existing methods and outperforms other approaches in both index space efficiency and time efficiency, fully verifying the effectiveness of the solutions proposed in this paper.
 	\enkeywords{Continuous Subgraph Matching; Dynamic Graph; Pruning Strategy; TopK Density}
 \end{enabstract}

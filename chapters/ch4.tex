@@ -1,4 +1,4 @@
-\chapter{基于压缩图的轻量级索引MWStar}
+\chapter{基于压缩图的轻量级索引MWstar}
 \label{ch4}
 本章具体讨论了我们提出的全局与局部MWstar索引方法以及图压缩算法。在TopK密度约束下的连续子图匹配问题中，如何高效地查询和更新子图匹配结果一直是一个挑战。
 为了提升子图匹配的效率，我们提出了一种轻量级的MWstar索引方法。
@@ -15,50 +15,64 @@
 最后，我们介绍了一种图压缩策略，通过标签过滤策略生成压缩图，该图大小的规模远小于原始图。并且在该子图上对于轻量级索引的维护步骤仍与原始图相同，
 其巧妙利用图压缩策略对候选节点的筛选能力以及轻量级索引对部分匹配的剪枝能力，大幅度提升了筛选top-k最高密度子图的效率。
 
-\section{MWSTAR：CSM-TopK的轻量级索引}
+\section{CSM-TopK问题的核心思想}
+为解决第三章中我们提出的基线算法框架的效率瓶颈问题以及基于密度的剪枝的核心挑战，我们提出了一种基于压缩图的轻量级索引结构——MWStar ，其核心思想是通过构建全局与局部协同的密度上界函数，并结合图压缩技术实现高效剪枝与增量维护。具体而言：
 
-\begin{figure}[h!]
-\def\wscorevone{0.45}
-\centering
-\begin{subfigure}[t]{0.465\linewidth}
-\centering
-\resizebox{\linewidth}{!}
-{
-\includegraphics{\csmfolder e_qstar.pdf}
-}
-\caption{Qstar示例}
-\label{fig:qstar}
-\end{subfigure}
-\begin{subfigure}[t]{0.515\linewidth}
-\centering
-\resizebox{\linewidth}{!}
-{
-\includegraphics{\csmfolder e_dstar.pdf}
-}
-\caption{Dstar示例}
-\label{fig:dstar}
-\end{subfigure}
-\caption{MWstar在查询图和数据图中的示例}
-\label{fig:exp:mwstar}
-\end{figure}
+（1）全局与局部密度上界的协同设计
 
-\subsection{星形结构子图与部分匹配}
+通过星形子结构分解，为每个查询图顶点构建其对应的星形结构最大匹配权重（全局MWstar），形成全局的密度上界$gBound$。在此基础上，进一步利用部分匹配的局部候选集交集特性，动态维护更紧致的密度上界 $lBound$（局部MWstar）。两者协同作用下，既能保证线性空间复杂度，又可通过近乎常数时间的更新操作实现高效剪枝，显著减少无效匹配路径的搜索开销。
+
+（2） 压缩图与索引的融合
+
+在动态图的维护过程中，通过邻域标签频率过滤（Neighbor Label Filtering，NLF）\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}规则构建压缩图$\cG_t$，仅保留存在匹配可能的顶点与边结构。该压缩图不仅能够大幅度降度数据规模（空间消耗降低至原始数据图的$\alpha^{\prime}$）倍，还使得MWstar索引的维护复杂度优化：将插入操作的时间复杂度从 $O(|\overline{E_Q}| d_t^{|V_Q|-2})$ 优化至 $O(|\overline{E_Q}| d_t^{(1 - \alpha^{\prime})(|V_Q| - 2)})$；将删除操作的时间复杂度 从$O(k^{\prime}|E_{G_t}| |\overline{E_Q}| d_t^{|V_Q| - 2})$优化至$O(\gamma^2 k^{\prime}|E_{G_t}| |\overline{E_Q}| (\gamma d_t)^{(1 - \alpha^{\prime})(|V_Q| - 2)})$。同时，压缩图的紧凑性进一步提升了候选集交集计算效率，从而增强了局部密度上界的紧致性。
+
+（3）动态剪枝与阈值更新机制
+
+在递归搜索过程中，实时结合全局与局部密度上界进行混合剪枝：若局部候选集为空或密度上界低于当前第$k$个匹配密度阈值，则立即终止该分支搜索。以全局MWstar的密度阈值作为局部MWstar的初始值，当局部候选集合更新时，则动态更新局部MWstar的密度上界，以增强后续剪枝能力。这一机制不仅能够提高密度剪枝的效果，而且在处理大规模数据时表现出了出色的可扩展性。
+
+\section{CSM-TopK的轻量级索引}
+
+\subsection{星形结构子图与星形部分匹配}
 \label{mwstar:star_subquery}
-
 \begin{definition}[星形结构子图]\label{def:star-subquery}
 对于查询$Q$和匹配序列$\Phi=\{u_1, u_2, \cdots, u_{|Q|} \}$，我们为每个查询顶点$u_i$定义其在$\Phi$下的星形结构子图$Qstar_{\Phi}(u_i)$，
 其包含顶点$LN(u_i) \cup \{u_i\}$以及连接$u_i$与其左邻居的边，即：$V_{Qstar_{\Phi}(u_i)} = LN(u_i) \cup \{u_i\}$，$E_{Qstar_{\Phi}(u_i)} = \{(u_i, u_j)\ |\ u_j\in LN(u_i)\}$。
 当上下文清晰时，我们可以用$Qstar(i)$表示相应的子图。
 \end{definition}
-图\ref{fig:qstar}展示了在匹配序列为\{$u_1$, $u_2$, $u_3$, $u_4$\}时，$Qstar(3)$和$Qstar(4)$的示例。
 
-考虑一个部分匹配$g^i=\{v_1, v_2, \cdots, v_i\}$，在匹配序列$\Phi$下，它匹配查询$q^i=\{u_1, u_2, \cdots, u_{i}\}$。
+\begin{definition}[星形部分匹配]\label{def:star-submatch}
+    考虑一个部分匹配$g^i=\{v_1, v_2, \cdots, v_i\}$，在匹配序列$\Phi$下，它匹配查询$q^i=\{u_1, u_2, \cdots, u_{i}\}$。
 对于查询顶点$u_{i^\prime}$（$1 \leq i^\prime \leq i$），
 假设$Qstar(i^\prime) = \{u_{x_1}, u_{x_2}, \cdots, u_{x_j}\}$（$j = |LN(u_{i^\prime})|$）。
 对于$g^i$的子图$g^\prime = \{v_{x_1}, v_{x_2}, \cdots, v_{x_j}\}$（即$g^\prime \subseteq g^i$），如果$g^\prime$匹配$Qstar(i^\prime)$，且每个$v_{x_{j^\prime}}$映射到$u_{x_{j^\prime}}$（$1 \leq i^\prime \leq i$），则我们称$g^\prime$为$g^i$中在$u_{i^\prime}$下的星形部分匹配，记作$Dstar_{\Phi}(g^i, i^\prime)$。
 当上下文明确时，我们也可以简化为$Dstar(g^i, i^\prime)$。
-图\ref{fig:dstar}展示了在匹配$g=\{v_1, v_2, v_8, v_{1001}\}$时的$Dstar(g, 3)$和$Dstar(g, 4)$的示例。
-
+\end{definition}
+图\ref{fig:exp:mwstar}展示了星形结构子图以及星形部分匹配的示例。在图\ref{fig:qstar}中，查询图$Q$的匹配序列为$\Phi=\{u_1,u_2,u_3,u_4\}$。每个查询顶点$u_i$对应的$Qstar(i)$由其左邻居和中心节点$u_i$构成,因此$Qstar(3)$包含节点$\{u_3,u_4,u_5\}$和边$(u_3,u_4),(u_3,u_5)$，$Qstar(4)$同理。图\ref{fig:dstar}的数据图中部分匹配$g=\{v_1,v_2,v_8,v_{1001}\}$对应查询序列$\Phi$。$Dstar(g,3)$表示$g$中与$Qstar(3)$匹配的子结构，$Dstar(g,4)$同理。
+\begin{figure}[h!]
+    \def\wscorevone{0.45}
+    \centering
+    \begin{subfigure}[t]{0.465\linewidth}
+    \centering
+    \resizebox{\linewidth}{!}
+    {
+    \includegraphics{\csmfolder e_qstar.pdf}
+    }
+    \caption{Qstar示例}
+    \label{fig:qstar}
+    \end{subfigure}
+    \hspace{-1cm}
+    \begin{subfigure}[t]{0.515\linewidth}
+    \centering
+    \resizebox{\linewidth}{!}
+    {
+    \includegraphics{\csmfolder e_dstar.pdf}
+    }
+    \caption{Dstar示例}
+    \label{fig:dstar}
+    \end{subfigure}
+    \caption{MWstar在查询图和数据图中的示例}
+    \label{fig:exp:mwstar}
+    \end{figure}
 \subsection{全局MWstar索引}
 \label{mwstar:global}
 接下来我们讨论全局MWstar索引的构建与应用。
@@ -164,7 +178,10 @@
      因此，当 $(v_1, v_2) \notin E_{g^\prime}$ 时，我们可以避免重新计算 $den(Qstar(i))$ 的高开销（见算法 \ref{alg:base-mwstar:update}  第 \ref{code:not-hit-return:begin}-\ref{code:not-hit-return:end}行）。
      通常，重新计算的概率是 $|E_{g^\prime}|/|E_{G_t}|$，即 $|LN(u_{i_2})|/|E_{G_t}|$,显然这个概率是非常小的。
      因此，重新计算的平均开销是 $O(|E_{G_t}|)*(|LN(u_{i_2})|/|E_{G_t}|)$，即 $O(|LN(u_{i_2})|)$。
-     由于存在 $|E_Q|$ 种匹配序列，每次删除操作的平均开销为 $O(|E_Q|*|LN(u_{i_2})|)$。
+     由于存在 $|E_Q|$ 种匹配序列，每次删除操作的平均开销为 $O(|E_Q||LN(u_{i_2})|)$。
+
+     全局MWstar索引通过在算法\ref{alg:find-dense-matches}中引入上界约束$gBound$进行剪枝，从而减少递归栈的深度，提升算法的整体计算效率。在基线方案中，递归操作的平均时间复杂度为 $O(d_t^{|V_Q|-2})$，平均空间复杂度为 $O(d_t|V_Q|)$。当引入全局索引以维护 $gBound$ 作为剪枝条件后，设剪枝比例为 $\beta \in (0,1)$，则递归深度将从 $|V_Q|-2$ 降至 $(1-\beta)(|V_Q|-2)$，从而将时间复杂度降低为：$O(d_{t}^{(1-\beta)(|V_Q|-2)})$,即相比原始方案减少了一个指数因子 $d_t^{\beta(|V_Q|-2)}$ 的开销。
+     考虑到递归操作是动态更新场景中插入与删除的核心组成部分，故引入全局 MWstar 索引对插入和删除操作的时间复杂度均具有相同的优化作用。
      \begin{algorithm}[H]
         \small
         \caption{全局 MWstar 维护}
@@ -218,39 +235,37 @@
            }
            }
     \end{algorithm}
-     全局MWstar索引通过在算法\ref{alg:find-dense-matches}中引入上界约束$gBound$进行剪枝，从而减少递归栈的深度，提升算法的整体计算效率。在基线方案中，递归操作的平均时间复杂度为 $O(d_t^{|V_Q|-2})$，平均空间复杂度为 $O(d_t|V_Q|)$。当引入全局索引以维护 $gBound$ 作为剪枝条件后，设剪枝比例为 $\beta \in (0,1)$，则递归深度将从 $|V_Q|-2$ 降至 $(1-\beta)(|V_Q|-2)$，从而将时间复杂度降低为：$O(d_{t}^{(1-\beta)(|V_Q|-2)})$,即相比原始方案减少了一个指数因子 $d_t^{\beta(|V_Q|-2)}$ 的开销。
-     考虑到递归操作是动态更新场景中插入与删除的核心组成部分，故引入全局 MWstar 索引对插入和删除操作的时间复杂度均具有相同的优化作用。
 
      上述优化以线性空间开销与近似常数级更新代价为代价，为每个部分匹配 $g^i$ 提供了上界 $gBound(g^i)$，用于在搜索过程中进行高效剪枝，从而显著减少不必要的匹配尝试，整体提升搜索性能。
      值得注意的是，该全局 MWstar 索引是我们方案的简化版本。接下来的 \ref{mwstar:local} 节中，我们将进一步优化此方案，提出一个局部版本的 MWstar，并设计一个面向 CSM-TopK 的搜索算法，其密度上限 $lBound$ 比 $gBound$ 更加紧凑，从而进一步提升搜索效率。
 
 \subsection{局部MWstar索引}
 \label{mwstar:local}
-我们设计了一种局部MWstar（Local MWstar），它可以与全局 MWstar 结合使用，从而构建一个更紧密的密度上界。
-局部MWstar通过在部分匹配过程中动态维护局部密度上界来提升匹配过程的效率和精确度。
-我们用 $lBound(g^i)$ 表示部分匹配 $g^i$ 的新上界，该上界通常比全局 MWstar 的上界更加严格。
-通过这种方式，局部MWstar不仅优化了密度计算，还为后续的查询操作提供了更高效的索引支持。
-接下来，我们首先介绍局部 MWstar 索引的定义，并在此基础上提出一种面向 CSM-TopK 查询的搜索策略，利用 $lBound$ 函数进行优化。
+我们设计了一种局部MWstar索引（Local MWstar），它可以与全局 MWstar索引结合使用，从而构建一个更紧密的密度上界。
+局部MWstar索引通过在部分匹配过程中动态维护局部密度上界来提升匹配过程的效率和精确度。
+我们用 $lBound(g^i)$ 表示部分匹配 $g^i$ 的新上界，该上界通常比全局 MWstar索引的上界更加严格。
+通过这种方式，局部MWstar索引不仅优化了密度计算，还为后续的查询操作提供了更高效的索引支持。
+接下来，我们首先介绍局部MWstar索引的定义，并在此基础上提出一种面向 CSM-TopK 查询的搜索策略，利用 $lBound$ 函数进行优化。
 
 
-\textbf{局部MWstar的定义}
+（1）\textbf{局部MWstar索引的定义}
 
-局部 MWstar 是全局 MWstar 的扩展。
-在全局 MWstar 中，对于每种匹配顺序 $\Phi$，我们维护不同子查询 $Qstar(i)$（$1\leq i\leq |V_Q|$）下星形结构部分匹配的最大权重。
+局部 MWstar索引是全局MWstar索引的扩展。
+在全局MWstar索引中，对于每种匹配顺序 $\Phi$，我们维护不同子查询 $Qstar(i)$（$1\leq i\leq |V_Q|$）下星形结构部分匹配的最大权重。
 而在局部 MWstar 中，我们针对每个特定的数据顶点维护类似的最大权重分布。
 
 具体而言，给定匹配序列 $\Phi$ 和子查询 $Qstar(i)$的条件下，针对数据图中的每个顶点 $v$，需维护所有满足以下条件的部分匹配 $g^\prime$ 的最大密度的完全匹配。那么，我们可以得出结论：
 
-（1）$v \in V_g^{\prime}$($v$ 属于$g^{\prime}$的顶点集合)
+\textcircled{1}~$v \in V_g^{\prime}$($v$ 属于$g^{\prime}$的顶点集合)
 
-（2） $g^{\prime}$能够完全匹配$Qstar(i)$ ，且在该匹配中顶点$v$被映射到查询顶点$u_i$
+\textcircled{2}~$g^{\prime}$能够完全匹配$Qstar(i)$ ，且在该匹配中顶点$v$被映射到查询顶点$u_i$
 % 我们维护所有匹配 $Qstar(i)$ ，其中 $v$ 映射到 $u_i$ 的部分匹配 $g^\prime$ 的最大密度，记作 $den(Qstar(i), v)$ 。
 
 例如，在图 \ref{fig:csm-topk} 中的运行示例，其中 $v_5$ 和相应的子查询 $Qstar(3)$（如图 \ref{fig:qstar} 所示）。存在两个子图,匹配 $Qstar(3)=\{u_1, u_2, u_3\}$，其中 $v_5$ 映射到 $u_3$：
 
-     （1）$g_1^\prime=\{v_1, v_2, v_5\}$，密度 $den(g_1^\prime) = 40$
+     \textcircled{1}~$g_1^\prime=\{v_1, v_2, v_5\}$，密度 $den(g_1^\prime) = 40$
 
-     （2）$g_2^\prime=\{v_1, v_3, v_5\}$，密度 $den(g_2^\prime) = 50$
+     \textcircled{2}~$g_2^\prime=\{v_1, v_3, v_5\}$，密度 $den(g_2^\prime) = 50$
 
 由于 $den(g_1^\prime)= 40 < den(g_2^\prime)=50$，因此我们设定 $den(Qstar(3), v_5) = 50$。
 此外，对于具有标签 $L(u_i)$的顶点集合 $V^\prime$，我们可以使用$den(Qstar(i), V^\prime)$来表示任何$v\in V^\prime$的最大$den(Qstar(i), v)$，即:
@@ -259,7 +274,7 @@
 \end{equation}
 
 
-\textbf{基于 $lBound$ 的 CSM-TopK 搜索策略}
+（2）\textbf{基于 $lBound$ 的 CSM-TopK 搜索策略}
 
 在此基础上，我们提出了面向CSM-TopK查询的搜索策略，该策略利用 $lBound$ 来优化搜索过程。
 对于每个部分匹配 $g^i$，我们始终为每个尚未匹配的查询顶点维护一个局部候选集（Local Candidate Set）。
@@ -289,7 +304,7 @@
             如果 $(u_{i^\prime}, u_j)\in E_Q$ (即, $u_j\in$ $RN(u_{i^\prime})$), 则 $v_j$ $\in N_{G_t}^{L(u_j)}(v_{i^\prime})$, 即 $v_j$ 必须是 $v_{i^\prime}$ 的邻居，标签为$L(u_j)$。
             因此，根据公式\ref{equation:local-candidate-set}，$v_j$ 将是$C_{g^i}(u_j)$中的顶点。
 \end{proof}
-\textbf{利用局部候选集计算新的界限}
+（3）\textbf{利用局部候选集计算新的界限}
 
 在定义 \ref{def:local-candidate-set} 和引理 \ref{lemma:local-candidate-set} 的基础上，在我们的递归搜索过程中，对于每一个部分匹配 $g^i$，我们可以为每个尚未匹配的查询顶点不断维护一个局部候选集，以加速 CSM-TopK 搜索。
 通过这种局部候选集的维护，我们能够有效地剪枝搜索空间，避免无效计算。
@@ -352,28 +367,26 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 在图 \ref{fig:exp:mwstar:pruning} 中，我们展示了一个基于 MWstar 的剪枝策略的应用示例。在该示例中，我们考虑了执行更新操作 $o_t = <+,v_1,v_2>$ 时，CSM-TopK 搜索树的演变过程。
 搜索从 部分匹配$g^2=\{v_1, v_2\}$ 开始，匹配查询 $q^2=\{u_1, u_2\}$，其中匹配序列为 $\Phi=\{u_1, u_2, u_3, u_4\}$。
 我们可以通过以下步骤来评估剪枝效果：
-\begin{itemize}
-\item
+
 \textcircled{1} 若没有 MWstar 索引，搜索树的扩展非常庞大。首先计算 $C_{g^2}(u_3)=\{v_5, v_6, v_7, v_8\}$，并将 $g^2$ 扩展为四个新的搜索分支。
 接着，对于每一个 $g^3 \in g^2 \times C_{g^2}(u_3)$，可行候选集 $C_{g^3}(u_4)$ 为 $\{v_{1001}, \cdots, v_{2000}\}$。
 因此，每个 $g^3$ 将扩展为 $1000$ 个新的搜索分支。
 没有 MWstar索引时，基于 $g^2$ 的搜索树中可能会有超过 $4000$ 个节点。
-\item
+
 \textcircled{2} 若仅使用全局 MWstar 索引，则可以通过计算每个扩展的 $gBound$，提前剪掉一些不可能的分支，减少搜索空间。
 对于 $q^3$ 下的四个分支，即 $g_1^3=\{v_1, v_2, v_5\}$、$g_2^3=\{v_1, v_2, v_6\}$、$g_3^3=\{v_1, v_2, v_7\}$、$g_4^3=\{v_1, v_2, v_8\}$，
 我们有 $gBound(g_3^3)=gBound(g_4^3)=50+10+10+den(Qstar(4))=130$，这个值小于 $den(g_{min})=140$，其中 $g_{min}=\{v_1, v_3, v_6, v_9\}$，如图 \ref{fig:csm-topk}c 所示。
 因此，$g_3^3$ 和 $g_4^3$会立即被剪枝。
 而$g_1^3$ 和 $g_2^3$ 不会被剪枝，因为 $gBound(g_1^3) = gBound(g_2^3) = 50+20+20+den(Qstar(4)) = 150 > 140$。
 因此，使用全局 MWstar 时，搜索空间的大小接近 $2000$。
-\item
-\textcircled{3} 若结合全局和局部 MWstar 索引后，计算 $lBound$ 并进行剪枝，能够显著缩小搜索空间。
+
+\textcircled{3} 若结合全局和局部MWstar索引后，计算$lBound$并进行剪枝，能够显著缩小搜索空间。
 在我们从 $g^2$ 开始进行搜索时，
 我们首先计算 $C_{g^2}(u_3)=\{v_5, v_6, v_7, v_8\}$，并且 $den(Qstar(3), C_{g^2}(u_3)) = 40$。
 同样，$C_{g^2}(u_4)=\{v_{1001}, \cdots, v_{2000}\}$，并且 $den(Qstar(4), C_{g^2}(u_4)) = 20$。
 因此，$lBound(g^2)=50+den(Qstar(3), C_{g^2}(u_3))+den(Qstar(4), C_{g^2}(u_4))=110<140$，因此 $g^2$ 会被剪枝。
 在这种情况下，总的搜索空间可以忽略不计。
 这一过程表明，基于MWstar的剪枝策略能够显著减少搜索空间，避免对不够密集的匹配进行无效的计算，从而提升了算法的效率。
-\end{itemize}
 
 在递归搜索过程中，我们为每一个部分匹配 $g^i$中的未匹配的查询顶点 $u_j$（即 $u_j \in V_Q \setminus V_{q^i}$）维护一个局部候选集。
 这些局部候选集将与MWstars一起使用，以便尽早修剪掉那些不太可能的部分匹配。算法 \ref{alg:localmwstar:framework} 中提供了这种面向CSM-TopK搜索的伪代码实现。
@@ -416,18 +429,20 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
     \end{algorithm}
 
 对于每个部分匹配 $g^i$，如果满足以下任意条件之一，我们可以安全地剪枝 $g^i$：
-\begin{itemize}
-\item \textcircled{1} 有一个局部候选集为空（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:lcs-empty:begin}-\ref{code:lcs-empty:end} 行），
-\item \textcircled{2} $lBound(g^i)$ 小于当前密度下界（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:B-formal:begin}-\ref{code:B-formal:end} 行）。
-\end{itemize}
+
+\textcircled{1}~有一个局部候选集为空（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:lcs-empty:begin}-\ref{code:lcs-empty:end} 行），
+
+\textcircled{2}~$lBound(g^i)$ 小于当前密度下界（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:B-formal:begin}-\ref{code:B-formal:end} 行）。
+
 如果 $g^i$ 未被剪枝，则可以利用已经计算好的可行候选集 $C_{g^i}(u_{i+1})$ 将 $g^i$ 扩展为若干个 $g^{i+1}$，继续递归搜索。
 
 对于每个 $g^{i+1} = g^i \cup \{v_{i+1}\}$，其中 $v_{i+1} \in C_{g^i}(u_{i+1})$，我们将按以下方式更新每个 $u_j$（$j > i+1$）的局部候选集：
 如果 $u_j \notin RN(u_{i+1})$，则无需执行任何操作；否则，如果 $u_j \in RN(u_{i+1})$（算法 \ref{alg:find-dense-matches-formal} 中的第 \ref{code:formal-each-rn:begin}-\ref{code:formal-each-rn:end} 行）：
-\begin{itemize}
-\item 如果 $u_j$ 的局部候选集未定义，则基于访问性的过滤将 $C_{g^{i+1}}(u_j)$ 设置为 $N_{G_t}^{L(u_j)}(v_{i+1})$，即 $v_{i+1}$ 的邻居的标签都为 $L(u_j)$。
-\item 如果 $u_j$ 的局部候选集已存在，则根据定义 \ref{def:local-candidate-set}，我们使用基于访问性的过滤，将 $C_{g^{i+1}}(u_j)$ 设置为 $C_{g^i}(u_j) \cap N_{G_t}^{L(u_j)}(v_{i+1})$。
-\end{itemize}
+
+\textcircled{1}~ 如果 $u_j$ 的局部候选集未定义，则基于访问性的过滤将 $C_{g^{i+1}}(u_j)$ 设置为 $N_{G_t}^{L(u_j)}(v_{i+1})$，即 $v_{i+1}$ 的邻居的标签都为 $L(u_j)$。
+
+
+\textcircled{2}~ 如果 $u_j$ 的局部候选集已存在，则根据定义 \ref{def:local-candidate-set}，我们使用基于访问性的过滤，将 $C_{g^{i+1}}(u_j)$ 设置为 $C_{g^i}(u_j) \cap N_{G_t}^{L(u_j)}(v_{i+1})$。
 
 \begin{algorithm}[H]
     \scriptsize
@@ -519,7 +534,7 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 我们用$\tau$表示$\cG_t$中的一个数据顶点，用$\cg$表示$\cG_t$中的一个子图。
 每个顶点$\tau \in V_{\cG_t}$都对应着$V_{G_t}$中的一个数据顶点和$V_Q$中的一个查询顶点之间的匹配关系。
 我们使用$\langle v_i, u_j \rangle$来表示一个匹配关系，其中$v_i$与$u_j$匹配，其中$v_i$是$u_j$的候选数据顶点。
-为了确保数据图中的顶点 $v_i$ 能够合理匹配查询图中的顶点 $u_j$，我们引入了邻域标签频率过滤策略（Neighborhood Label Frequency Filtering，NLF）~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}，即对于顶点$v_i$和查询顶点$u_j$，如果$v_i$通过了$u_j$的NLF规则~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}（$v_i$的邻域中标签频率大于等于$u_j$的邻域标签频率），则称$v_i$是$u_j$的NLF候选节点（NLF-candidate），形式化的表示为：
+为了确保数据图中的顶点 $v_i$ 能够合理匹配查询图中的顶点 $u_j$，我们引入了NLF过滤策略~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}，即对于顶点$v_i$和查询顶点$u_j$，如果$v_i$通过了$u_j$的NLF规则~\cite{sgi-turbo-iso-DBLP:conf/sigmod/HanLL13}（$v_i$的邻域中标签频率大于等于$u_j$的邻域标签频率），则称$v_i$是$u_j$的NLF候选节点（NLF-candidate），形式化的表示为：
 若$v_i$匹配$u_j$，并且对于任意标签$l$（在$L_Q$下，而不是$\cL_{\cQ}$），必须满足
 \begin{equation}
 |N_{G_t}^l(v_i)| \geq |N_Q^l(u_j)|
@@ -527,21 +542,23 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 其中 $N_{G_t}^l(v_i)$ 表示数据图 $G_t$ 中与 $v_i$ 相邻且标签为 $l$ 的邻居节点数量，$N_Q^l(u_j)$ 表示查询图中与 $u_j$ 相邻且标签为 $l$ 的邻居节点数量。
 
 因此，我们规定顶点 $v_i$ 与 $u_j$ 之间的匹配关系需同时满足以下两个条件：
-\begin{itemize}
-\item 数据图中的节点$v_i$的标签需要与查询图中的节点$u_j$的标签保持一致。
-\item 且在数据图中$v_i$的邻居节点的标签分布必须覆盖$u_j$节点的标签分布。即若 $u_j$ 的邻居中包含 $3$ 个标签为 $A$ 的节点和 $2$ 个标签为 $B$ 的节点，则 $v_i$ 至少应有 $3$ 个标签为 $A$ 的邻居节点，以及 $2$ 个标签为 $B$ 的邻居节点。
-\end{itemize}
+
+\textbullet~数据图中的节点$v_i$的标签需要与查询图中的节点$u_j$的标签保持一致。
+
+\textbullet~且在数据图中$v_i$的邻居节点的标签分布必须覆盖$u_j$节点的标签分布。即若 $u_j$ 的邻居中包含 $3$ 个标签为 $A$ 的节点和 $2$ 个标签为 $B$ 的节点，则 $v_i$ 至少应有 $3$ 个标签为 $A$ 的邻居节点，以及 $2$ 个标签为 $B$ 的邻居节点。
+
 通过 NLF 过滤规则，可以在子图匹配的候选集构建阶段有效地剔除大量不可能形成匹配关系的节点对，从而降低后续匹配算法的搜索空间，提升整体执行效率。
 
 我们构造的压缩图中，每个顶点$\tau \in V_{\cG_t}$ 唯一对应于一个匹配关系$\langle v_i, u_j \rangle$，其中$v_i$是$u_j$的NLF候选节点。
 在此基础上，我们将$\cL(\tau)$设置为$u_j$在$\cQ$中的标签，即$l_j^{new}$。
 据此，压缩图的顶点集 $V_{\cG_t}$ 可按如下方式构建：
-\begin{itemize}
-\item 将$V_{\cG_t}$初始化为空集，遍历数据图原始$G_0$中的所有节点$v_i\in V_{G_0}$,枚举$v_i$和$u_j$的所有可能匹配对。若 $v_i$ 满足 $u_j$ 的 NLF 过滤条件，即为其 NLF 候选，则在 $V_{\cG_t}$ 中创建一个新顶点 $\tau_{i^\prime}$ 表示匹配对 $\langle v_i, u_j \rangle$，并设置其标签为 $\cL(\tau_{i^\prime}) = l_j^{new}$，即 $u_j$ 的查询标签。
-\item 基于 $V_{\cG_t}$ 构建压缩图中的边集 $E_{\cG_t}$。考虑两个压缩图顶点 $\tau_1$ 和 $\tau_2$，分别对应匹配对 $\langle v_{i_1}, u_{j_1} \rangle$ 与 $\langle v_{i_2}, u_{j_2} \rangle$。当且仅当 $(v_{i_1}, v_{i_2}) \in E_{G_t}$ 且 $(u_{j_1}, u_{j_2}) \in E_Q$ 时，才在 $E_{\cG_t}$ 中添加一条边 $(\tau_1, \tau_2)$。
+
+\textbullet~将$V_{\cG_t}$初始化为空集，遍历数据图原始$G_0$中的所有节点$v_i\in V_{G_0}$,枚举$v_i$和$u_j$的所有可能匹配对。若 $v_i$ 满足 $u_j$ 的 NLF 过滤条件，即为其 NLF 候选，则在 $V_{\cG_t}$ 中创建一个新顶点 $\tau_{i^\prime}$ 表示匹配对 $\langle v_i, u_j \rangle$，并设置其标签为 $\cL(\tau_{i^\prime}) = l_j^{new}$，即 $u_j$ 的查询标签。
+
+\textbullet~基于 $V_{\cG_t}$ 构建压缩图中的边集 $E_{\cG_t}$。考虑两个压缩图顶点 $\tau_1$ 和 $\tau_2$，分别对应匹配对 $\langle v_{i_1}, u_{j_1} \rangle$ 与 $\langle v_{i_2}, u_{j_2} \rangle$。当且仅当 $(v_{i_1}, v_{i_2}) \in E_{G_t}$ 且 $(u_{j_1}, u_{j_2}) \in E_Q$ 时，才在 $E_{\cG_t}$ 中添加一条边 $(\tau_1, \tau_2)$。
 这表示数据图中的边 $(v_{i_1}, v_{i_2})$ 与查询图中的边 $(u_{j_1}, u_{j_2})$ 之间存在映射关系。
-\item 将边$(\tau_1, \tau_2)$的权重设置为边$(v_1, v_2)$的权重，即$W_{v_1, v_2}$。
-\end{itemize}
+
+\textbullet~将边$(\tau_1, \tau_2)$的权重设置为边$(v_1, v_2)$的权重，即$W_{v_1, v_2}$。
 
 在压缩图的初始化过程中，需要遍历所有数据图节点及其邻居，并对每个可能的匹配对执行 NLF 过滤判断，因此初始化的时间复杂度为 $O(|V_{G_0}| \cdot d_t)$，其中 $d_t$ 是数据图的平均度。该过程仅在初始阶段执行一次，后续更新将采用增量维护方式。此外，由于压缩图中的节点仅保留通过 NLF 过滤的匹配关系，且边的构建受限于查询图结构，其整体存储空间显著小于原始数据图。
 图\ref{fig:compact}中展示了图\ref{fig:csm-topk}a中的运行示例对应的压缩图$\cG_t$以及新查询图$\cQ$。
@@ -597,7 +614,7 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 其中 $\tau_{x}$ 对应于匹配关系 $\langle v_{i_x}$, $u_{j_x}\rangle$（$1\leq x\leq |V_{\cQ}|$），
 相应的节点集合$g=$ \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 必须是 $A_{G_t, Q}^k$ 中的一个有效匹配，并且满足 $den(g) = den(\cg)$。
 \end{theorem}
-\begin{proof}
+\begin{proof}%todo详细
 设 $f$ 表示从 $V_{\cQ}$ 到 $V_{\cg}$ 的双向映射，即 $f(u_x) = \tau_x$ （$1\leq x\leq |V_Q|$）。
 我们可以构建一个从 $V_{\cg}$ 到集合 \{$v_{i_1}$, $v_{i_2}$, $\cdots$, $v_{i_{|V_Q|}}$\} 的映射 $f^{\prime}$，其中 $f^{\prime}(\tau_x) = v_{i_x}$。
 由于我们在搜索 $\cg$ 时应用了访问扩展，确保对于任意 $1\leq x<y\leq |V_Q|$，$v_{i_x} \neq v_{i_y}$， $f^{\prime}$ 也是双射的。
@@ -620,18 +637,21 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 \subsubsection{插入操作}
 如果 $o_t$ 是一个插入操作，
 我们首先检查 $v_{i_1}$ （或 $v_{i_2}$）是否是$G_t$上$u_{j_1}$（或 $u_{j_2}$）的 NLF 候选，如果是，则按照以下步骤对 $E_{\cG_{t-1}}$ 进行调整：
-\begin{itemize}
-\item \textcircled{1} 我们首先将更新操作$o_t$应用到图$G_{t-1}$，生成新的图 $G_t$，然后初始化 $\cG_t = \cG_{t-1}$。
-\item \textcircled{2} 如果 $v_{i_1}$ 不是 $u_{j_1}$ 的 NLF 候选者，且 $v_{i_2}$ 也不是 $u_{j_2}$ 的 NLF 候选者，则$o_t$在$\cG_{t-1}$上不会有任何更新，我们可以直接结束当前更新。
-\item \textcircled{3} 如果 $v_{i_1}$（对称情况是 $v_{i_2}$）是 $u_{j_1}$ 的一个新的 NLF 候选者，
+
+\textcircled{1} 我们首先将更新操作$o_t$应用到图$G_{t-1}$，生成新的图 $G_t$，然后初始化 $\cG_t = \cG_{t-1}$。
+
+\textcircled{2} 如果 $v_{i_1}$ 不是 $u_{j_1}$ 的 NLF 候选者，且 $v_{i_2}$ 也不是 $u_{j_2}$ 的 NLF 候选者，则$o_t$在$\cG_{t-1}$上不会有任何更新，我们可以直接结束当前更新。
+
+\textcircled{3} 如果 $v_{i_1}$（对称情况是 $v_{i_2}$）是 $u_{j_1}$ 的一个新的 NLF 候选者，
 即在 $V_{\cG_{t-1}}$ 中没有与 $\langle v_{i_1}, u_{j_1} \rangle$ 相对应的顶点，
 那么我们将在 $\cG_t$ 中为 $\langle v_{i_1}, u_{j_1} \rangle$创建一个标签为$i_1$的新顶点 $\tau_1$。
 新顶点 $\tau_1$ 的加入可能会导致新的边加入到 $\cG_t$。
 我们可以遍历 $v_{i_1}$ 在 $G_t$ 中的邻居，并为每个 $v_{i_3}\in N_{G_t}(v_{i_1})$，
 计算所有匹配对 $\langle v_{i_3}, u_{j_3} \rangle$，使得 $u_{j_3}$ 是 $u_{j_1}$ 的邻居，并且 $v_{i_3}$ 是 $u_{j_3}$ 的 NLF 候选者。
 这样，我们可以将每条边 $(\tau_1, \tau_3)$ 添加到 $\cG_t$，其中 $\tau_3$ 是对应于 $\langle v_{i_3}, u_{j_3} \rangle$ 的顶点。
-\item \textcircled{4} 如果 $v_{i_1}$ 和 $v_{i_2}$ 分别是 $u_{j_1}$ 和 $u_{j_2}$ 的 NLF 候选者，并且它们都不是新的，那么我们将把边 $(\tau_1, \tau_2)$ 添加到 $\cG_t$，其中 $\tau_1$ 和 $\tau_2$ 分别对应于 $\langle v_{i_1}, u_{j_1} \rangle$ 和 $\langle v_{i_2}, u_{j_2} \rangle$两个顶点。
-\end{itemize}
+
+\textcircled{4} 如果 $v_{i_1}$ 和 $v_{i_2}$ 分别是 $u_{j_1}$ 和 $u_{j_2}$ 的 NLF 候选者，并且它们都不是新的，那么我们将把边 $(\tau_1, \tau_2)$ 添加到 $\cG_t$，其中 $\tau_1$ 和 $\tau_2$ 分别对应于 $\langle v_{i_1}, u_{j_1} \rangle$ 和 $\langle v_{i_2}, u_{j_2} \rangle$两个顶点。
+
 
 这些步骤保证了插入操作后的图结构的正确性，并且通过逐步将新插入的边添加到图中，我们能够确保图 $\cG_t$ 是对图 $\cG_{t-1}$ 的正确扩展。
 
@@ -662,11 +682,12 @@ den(g_{max}) \leq den(g^i) + \sum\nolimits_{j=i+1}^{|V_Q|} \left(den(Qstar(j), C
 
 \subsubsection{删除操作}
 若 $o_t$ 是一个删除操作，我们按以下步骤进行维护：
-\begin{itemize}
-\item \textcircled{1} 在图$G_{t-1}$ 上应用更新操作$o_t$，得到图$G_t$，然后初始化 $\cG_t = \cG_{t-1}$；
-\item \textcircled{2} 如果在 $\cG_{t-1}$ 中，$v_{i_1}$ 既不是 $u_{j_1}$ 的 NLF 候选者，$v_{i_2}$ 也不是 $u_{j_2}$ 的 NLF 候选者，那么我们无需做任何操作，因为 $\cG_{t-1}$ 上不会发生更新；
-\item \textcircled{3} 如果某个顶点 $\tau$ 在删除边 $(v_{i_1}, v_{i_2})$ 后失效，我们需要从图 $\cG_t$ 中删除该顶点 $\tau$，并移除与 $\tau$ 相邻的边。
-\end{itemize}
+
+\textcircled{1} 在图$G_{t-1}$ 上应用更新操作$o_t$，得到图$G_t$，然后初始化 $\cG_t = \cG_{t-1}$；
+
+\textcircled{2} 如果在 $\cG_{t-1}$ 中，$v_{i_1}$ 既不是 $u_{j_1}$ 的 NLF 候选者，$v_{i_2}$ 也不是 $u_{j_2}$ 的 NLF 候选者，那么我们无需做任何操作，因为 $\cG_{t-1}$ 上不会发生更新；
+
+\textcircled{3} 如果某个顶点 $\tau$ 在删除边 $(v_{i_1}, v_{i_2})$ 后失效，我们需要从图 $\cG_t$ 中删除该顶点 $\tau$，并移除与 $\tau$ 相邻的边。
 
 在每次删除边后，我们将相应地更新 MWstars。根据第 \ref{ch3:base-framework} 节中的框架，如果之前排名前 $k$ 的匹配结果已经过期，无论 $\cG_{t-1}$ 中删除了多少条边，我们只需要计算一次补充的答案。
 此外，我们的重新计算是在压缩图 $\cG_t$ 上进行的，而不是在 $G_t$ 上。

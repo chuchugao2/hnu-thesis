@@ -1,7 +1,7 @@
-\chapter{密度约束下的TopK连续子图匹配问题}
+\chapter{ CSM-TopK问题的基线方案}
 \label{ch3}
 本章基于我们提出的新问题——密度约束下的TopK连续子图匹配问题，提出了TopK密度剪枝的基线方法。首先阐述了目前连续子图匹配研究中缺乏与密度有效结合的工作，然后给出了问题的定义以及相关定理的证明，
-接着详细描述了CSM-TopK的基础框架以及密度剪枝策略的基线方案，并分析基于密度的剪枝的技术挑战，然后提出本文的核心思想。
+接着详细描述了CSM-TopK的基线算法框架以及密度剪枝策略的基线方案，并分析基于密度的剪枝的技术挑战。
 \section{引言}
 \label{ch3:introduction}
 图数据在许多领域中都具有广泛的应用，尤其是在社交网络、交通监控、金融风控等动态变化的场景中，图结构数据的处理和分析变得愈发重要。
@@ -15,7 +15,7 @@
 
 为此，提出了连续子图匹配（Continuous Subgraph Matching, CSM）问题，即在动态图中，通过增量更新的方式维护子图匹配结果，避免每次图结构发生变化时重新计算整个匹配过程。
 CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效，特别是在处理大规模图数据时，该方法能够显著减少不必要的重复计算，进而提高图数据处理的效率。
-尽管连续子图匹配（CSM）问题已得到初步关注，但现有研究主要集中在如何实现匹配结果的增量更新和提高计算效率。
+尽管CSM问题已得到初步关注，但现有研究主要集中在如何实现匹配结果的增量更新和提高计算效率。
 然而，在动态图中，如何根据优先级筛选出最重要的子图匹配结果仍是一个未被充分探讨的问题。
 在许多应用场景中，子图匹配结果往往是有优先级的。
 例如，在金融欺诈模式检测中，流通金额数更高的匹配的分析优先级可能较高。
@@ -50,6 +50,16 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
     \item  $G_t$表示在$G_{t-1}$上应用操作$o_t$后形成的图（$t \geq 0$）    
     \end{itemize} 
     \end{definition}
+    如图\ref{fig:exp:updatestream}展示了动态图中的一个更新流示例。对于更新操作$O_{t-1}$，他是一个插入操作，即$O_{t-1}=<+,v_1,v_3>$因此$G_{t-1}$中将插入新边$(v_1,v_3)$从而生成$t$时刻数据图$G_t$。对于更新操作$O_{t}$，他是一个删除操作，即$O_{t}=<-,v_1,v_{10}>$因此$G_{t}$中将删除边$(v_1,v_{10})$从而生成$t+1$时刻数据图$G_{t+1}$。
+    \begin{figure}[h!]
+        \centering
+        \resizebox{0.9\linewidth}{!}{
+        \includegraphics{\figs updatestream.pdf}
+        }
+        \caption{更新流$\Delta$示例}
+        \label{fig:exp:updatestream}
+        \end{figure}    
+      
     
     \begin{definition}[子图匹配]\label{def:subgraph-matching}
     子图$g$是查询图$Q$在图$G$中的匹配（子图同构），当且仅当存在双向映射函数$f: V_Q \rightarrow V_g$满足：
@@ -114,18 +124,71 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
     $g_0=\{v_1, v_3, v_4, v_9\}$，$g_1=\{v_1, v_3, v_5, v_9\}$，$g_1=\{v_1, v_3, v_6, v_9\}$，密度分别为180，150，140。
     \begin{theorem} \label{theorem:np-hard}
     CSM-TopK属于NP难问题
-    \end{theorem}
-    \begin{proof}
-    通过将图$G$的最大团计算问题~\cite{clique-DBLP:journals/eor/WuH15}归约到CSM-TopK：
-    在图$G$上随机生成插入操作，形成一个动态图；
-    然后对顶点数从1到$|V_G|$的完全图查询执行CSM-TopK搜索（$k=1$）；
-    CSM-TopK返回的最大规模的匹配正是$G$中的最大团。
-    该归约过程具有多项式时间复杂度，故CSM-TopK属于NP难问题。
-    \end{proof}
+    \end{theorem} %todo详细证明
+    % \begin{proof}
+    % 通过将图$G$的最大团计算问题~\cite{clique-DBLP:journals/eor/WuH15}归约到CSM-TopK：
+    % 在图$G$上随机生成插入操作，形成一个动态图；
+    % 然后对顶点数从1到$|V_G|$的完全图查询执行CSM-TopK搜索（$k=1$）；
+    % CSM-TopK返回的最大规模的匹配正是$G$中的最大团。
+    % 该归约过程具有多项式时间复杂度，故CSM-TopK属于NP难问题。
+    % \end{proof}
+        
+        \begin{proof}
+        通过最大团问题归约到CSM-TopK问题完成证明，具体过程如下：
+
+        （1）\textbf{最大团问题定义与归约目标}
+
+        最大团问题：给定无向图$G=(V,E)$，求其包含顶点数最多的完全子图（团）的大小。最大团问题是Karp\ 21个NP完全问题之一，并且已被严格证明为NP难问题~\cite{clique-DBLP:journals/eor/WuH15}。因此我们只需要将图的最大团问题归约到CSM-TopK问题上，即可证明CSM-TopK是NP难的。
+        
+        （2）\textbf{归约构造过程}
+
+        \textcircled{1}~动态图构造：
+        令初始图$G_0$为空图，对原图$G$的每条边$(v_i,v_j)\in E$生成插入操作$o_t=(+,v_i,v_j)$，最终形成动态图$G=(G_0,\Delta)$，使得$G_{|\Delta|}=G$。
+        
+        \textcircled{2}~查询图设计：
+        构造查询图$Q$为$s$-顶点完全图（$s\in[1,|V_G|]$），所有顶点标签相同，边权重定义为：
+        \begin{equation}
+        W_{v_1,v_2} = 
+        \begin{cases} 
+        1 & \text{若 }(v_1,v_2)\in E \\
+        0 & \text{否则}
+        \end{cases}
+        \end{equation}
+        
+        
+        \textcircled{3}~\textit{密度定义}：子图$g$的密度$den(g)$的密度定义参照\ref{euq:dense_g}，即子图的边权和。
+        
+        （3）\textbf{正确性证明}
+        \begin{lemma}
+            团与匹配的等价性：若$Q$是$s$-顶点完全图，则其匹配$g$必为$G$的$s$-顶点团。
+        \end{lemma}
+        \begin{proof}
+            完全图要求匹配$g$的顶点两两相连，即$E_g$包含所有可能的$\frac{s(s-1)}{2}$条边，故$g$构成完全子图。
+        \end{proof}
+        \begin{lemma}
+            密度与团大小的关系：若$g$是$s$-顶点团，则$\text{den}(g)=\frac{s(s-1)}{2}$。
+        \end{lemma}
+        \begin{proof}
+            因为上述我们将边权设置为1，根据\ref{euq:dense_g}密度定义直接可得$\text{den}(g)=\frac{s(s-1)}{2}$。
+        \end{proof}
+        \begin{lemma}
+            最大团的唯一性：若$s^*$是最大团大小，则对应的匹配$g$在CSM-TopK中密度最大。
+        \end{lemma}
+        \begin{proof}
+            假设存在更大的团$s'>s^*$，则$\text{den}(g')=\frac{s'(s'-1)}{2}>\text{den}(g)$，与最大团定义矛盾。
+        \end{proof}        
+        （4）\textbf{归约的多项式时间性}
+
+        \textcircled{1}~构造时间复杂度：
+        遍历$|E_G|$条边构造动态图，生成$|V_G|$个完全图查询，总时间为$O(|V_G|+|E_G|)$（多项式时间）。
+        
+        \textcircled{2}~归约有效性：对每个$s\in[1,|V_G|]$执行CSM-TopK查询（$k=1$），最大密度对应的$s^*$即为最大团大小。因此，最大团问题可归约到CSM-TopK问题。
+        综上，CSM-TopK问题包含最大团问题作为特例，且归约过程在多项式时间内完成，故CSM-TopK属于NP难问题。
+        \end{proof}
 \section{CSM-TopK的基线方案}
-本节提出了CSM-TopK的基线方案。首先，我们介绍了CSM-TopK的基线框架，后续的所有优化都将在此框架基础上展开；
-接着，阐述了如何在该基线框架中引入最坏情况最优连接（worst-case optimal join, 简称 WCOJ）进行扩展部分匹配，并基于第$k$个子图匹配结果作为密度上界，进行简单的剪枝策略。
-\subsection{CSM-TopK的基线框架}
+本节提出了CSM-TopK的基线方案。首先，我们介绍了CSM-TopK的基线算法框架，后续的所有优化都将在此框架基础上展开；
+接着，阐述了如何在该基线算法框架中引入最坏情况最优连接（Worst-Case Optimal Join，WCOJ）进行扩展部分匹配，并基于第$k$个子图匹配结果作为密度上界，进行简单的剪枝策略。
+\subsection{CSM-TopK的基线算法框架}
 \label{ch3:base-framework}
 在具有TopK密度约束的连续子图匹配问题上，若要正确且快速的获取top-k子图匹配结果，必须满足以下几个关键条件：
 
@@ -139,7 +202,7 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 （3）密度索引结构在查询图匹配过程中起到至关重要的作用。
 特别地，当查询图匹配过程中引入密度约束时，密度上限越小，其对匹配过程的约束越强，从而能够有效地剪枝没有希望的中间结果，使得 top-k子图匹配过程更加高效。
 
-在本节中，我们将介绍CSM-TopK的基础框架，第\ref{ch4}章将详细探讨索引结构在该框架中的重要作用，特别是在top-k子图匹配的搜索过程中如何通过剪枝机制显著提升效率。
+在本节中，我们将介绍CSM-TopK的基线算法框架，第\ref{ch4}章将详细探讨索引结构在该框架中的重要作用，特别是在top-k子图匹配的搜索过程中如何通过剪枝机制显著提升效率。
 
 
 给定动态图$\iG=(G_0, \Delta)$和查询图$Q$，我们假设$A_0^k$已预先计算完成。对于每个操作$o_t$，我们关注在已获得$A_{t-1}^k$的情况下，如何计算$A_t^k$。
@@ -148,7 +211,7 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 若$o_t$为边删除操作（即$op=-$），则$A_{t-1}^k$中包含$(v_1, v_2)$的结果将失效。假设删除边$(v_1, v_2)$导致$k^\prime$个结果过期，则需从$G_t$中搜索$k^\prime$个未在$A_{t-1}^k$中出现的高密度匹配进行补充。
 每个补充匹配$g^\prime$必须满足$g^\prime \in A_{t-1} \setminus A_{t-1}^k$。
 
-算法\ref{alg:baseline:framework}描述了 CSM-TopK 的基础框架，用于处理动态图中的 top-k 连续子图匹配问题。
+算法\ref{alg:baseline:framework}描述了 CSM-TopK 的基线算法框架，用于处理动态图中的 top-k 连续子图匹配问题。
 输入包括动态图$\iG=(G_0, \Delta)$、查询图$Q$和参数$k$，输出为每个时刻的top-k匹配结果。
 算法分为离线预处理和在线处理两个阶段两个部分。
 
@@ -159,73 +222,72 @@ CSM问题的提出使得图数据中的子图匹配变得更加灵活和高效�
 如果有多个候选查询顶点，我们将从连接数最多的顶点中随机选择一个。
 
 在线处理部分，对于每个更新操作$o_t$，我们首先在 $G_{t-1}$ 上应用 $o_t$更新得到$G_t$，然后将 $A_t^k$ 初始化为 $A_{t-1}^k$，具体的处理步骤如下：
-\begin{itemize}
-    \item \textbf{边插入操作}（$op=+$）: 如果 $o_t$ 表示插入一条边 $(v_1, v_2)$，该边匹配查询边 $(u_1, u_2)$（见算法 \ref{alg:baseline:framework} 中的第 \ref{code:base-ins:begin} 行至第 \ref{code:base-ins:end} 行），我们会以递归的方式扩展部分匹配 $g^2 = \{v_1, v_2\}$，生成密度较高的完全匹配，匹配顺序从 $u_1$ 和 $u_2$ 开始。
-    此递归搜索方法将在 \ref{ch3:wegiht-prune-baseline} 节中进一步讨论（具体见算法 \ref{alg:find-dense-matches} 中的 \emph{FindDenseMatches} 函数）。这种方法保证了在每次插入边后，匹配的更新是增量的，并且通过递归方式尽可能高效地找到新的匹配，并且在递归的过程中舍弃top-k以外的匹配结果。
-    \item \textbf{边删除操作}（$op=-$）:  如果 $o_t$ 表示删除一条边 $(v_1, v_2)$（见算法 \ref{alg:baseline:framework} 中的第 \ref{code:base-del:begin} 行至第 \ref{code:base-del:end} 行），
-    我们需要删除所有包含 $(v_1, v_2)$ 的过期匹配结果。如果有 $k^\prime$ 个过期的匹配，我们需要在 $G_t$ 中计算另外 $k^\prime$ 个密集匹配以补充答案集合，从而形成新的 $A_{t}^k$。
-    为了确保增量更新的正确性，删除操作后的补充匹配策略是非常关键的，必须遍历 $E_{G_t}$ 和 $E_Q$，对于每个匹配关系，其中数据边 $(v_{i_1}, v_{i_2})$ 匹配查询边 $(u_1, u_2)$，我们会对 $g^2 = \{v_{i_1}, v_{i_2}\}$ 进行子图搜索，匹配顺序从 $u_1$ 和 $u_2$ 开始。
-    这样可以在删除一条边后，保持top-k匹配的有效性，并通过遍历补充新的密集匹配来维护结果的准确性。
-\end{itemize}
-\begin{algorithm}[h!]
-\small
-\caption{\label{alg:baseline:framework}CSM-TopK基础框架}
-\KwIn{动态图$\iG=(G_0, \Delta)$，查询$Q$，参数$k$}
-\KwOut{各时刻$G_t$的top-k结果$A^k_t$}
-	为$Q$的每条边$(u_1, u_2)$构建匹配序列$\Phi$ \label{code:build-matching-order} \\
-	在$G_0$上计算初始top-k结果集$A_0^k$ \label{code:build-initial-topk}\\
-    \ForEach{$o_t=(op,v_1,v_2)\in \Delta$}{
-		应用$o_t$生成新图$G_t$ \\
-		初始化$A^k_{t} \leftarrow A^k_{t-1}$ \\
-		设$\Phi$为从$u_1,u_2$为起始点的匹配序列\\
-        \If{$op = +$}{ \label{code:base-ins:begin}
-            \ForEach{$(u_1,u_2)\in E_{Q_t}$\ 匹配\ $(v_1, v_2)$} { 
-                设$g^2=\{v_1,v_2\}$, 并将$v_1$,$v_2$设置为已访问\\ \label{code:match-vertex}
-				$\mathrm{FindDenseMatches}$($G_t$,$Q$,$\Phi$,$g^2$, $A_t^k$,$k$) \label{code:baseline:end} \\
-                /*详细见算法\ref{alg:find-dense-matches}*/  \label{code:base-ins:end}
-            }
-        }
-        \If{$op = -$}{   \label{code:base-del:begin} 
-			从当前$A_t^k$中删除所有包含$(v_1, v_2)$的过期匹配 \\
-            \If{$(k^\prime = |A_{t-1}^k| - |A_{t}^k|) > 0$}{
-                \ForEach{$(v_{i_1},v_{i_2})\in E_{G_{t}}$}{
-                        \ForEach{$(u_1,u_2)\in E_{Q}$\ 匹配\ $(v_{i_1},v_{i_2})$}{
-                             设$g^2=\{v_{i_1},v_{i_2}\}$并且将$v_{i_1}$, $v_{i_2}$设置为已访问  \\
-                             $\mathrm{FindDenseMatches}$($G_t$,$Q$,$\Phi$,$g^2$, $A_t^k$, $k$)\\
-                             将$v_{i_1}$、$v_{1i_2}$设置为未访问\label{code:base-del:end} 
-                        }
-                }
-                } 
-            } 
-       } 
-\Return
-\end{algorithm}
+
+\textbullet~\textbf{边插入操作}（$op=+$）: 如果 $o_t$ 表示插入一条边 $(v_1, v_2)$，该边匹配查询边 $(u_1, u_2)$（见算法 \ref{alg:baseline:framework} 中的第 \ref{code:base-ins:begin} 行至第 \ref{code:base-ins:end} 行），我们会以递归的方式扩展部分匹配 $g^2 = \{v_1, v_2\}$，生成密度较高的完全匹配，匹配顺序从 $u_1$ 和 $u_2$ 开始。 此递归搜索方法将在 \ref{ch3:wegiht-prune-baseline} 节中进一步讨论（具体见算法 \ref{alg:find-dense-matches} 中的FindDenseMatches函数）。这种方法保证了在每次插入边后，匹配的更新是增量的，并且通过递归方式尽可能高效地找到新的匹配，并且在递归的过程中舍弃top-k以外的匹配结果。
+
+\textbullet~ \textbf{边删除操作}（$op=-$）:  如果 $o_t$ 表示删除一条边 $(v_1, v_2)$（见算法 \ref{alg:baseline:framework} 中的第 \ref{code:base-del:begin} 行至第 \ref{code:base-del:end} 行），
+我们需要删除所有包含 $(v_1, v_2)$ 的过期匹配结果。如果有 $k^\prime$ 个过期的匹配，我们需要在 $G_t$ 中计算另外 $k^\prime$ 个密集匹配以补充答案集合，从而形成新的 $A_{t}^k$。
+为了确保增量更新的正确性，删除操作后的补充匹配策略是非常关键的，必须遍历 $E_{G_t}$ 和 $E_Q$，对于每个匹配关系，其中数据边 $(v_{i_1}, v_{i_2})$ 匹配查询边 $(u_1, u_2)$，我们会对 $g^2 = \{v_{i_1}, v_{i_2}\}$ 进行子图搜索，匹配顺序从 $u_1$ 和 $u_2$ 开始。
+这样可以在删除一条边后，保持top-k匹配的有效性，并通过遍历补充新的密集匹配来维护结果的准确性。
 
 综合上述，我们可以得出结论，该CSM-TopK框架主要用于增量计算边插入操作后的匹配，并在边删除操作后补充失效的匹配来维持有效的top-k子图匹配的搜索过程。
 这种增量更新的方式使得CSM-TopK能够高效地处理动态图中的子图匹配问题，避免了每次操作都重新计算所有可能的匹配，从而显著提升了算法的效率。如果没有引入密度剪枝策略，该问题就转化为“rank after matching”问题。这种情况下，我们必须考虑所有可能的匹配结果，并对其进行排序，最后选出排名前$k$的结果。
 这种方法虽然能够解决问题，但在计算上会非常昂贵，尤其是在数据图规模较大，查询图复杂度较高时。没有密度限制的情况下，匹配的空间会急剧扩大，导致计算时间和空间消耗大幅增加。
-因此，虽然当前主流的连续子图匹配算法，如Rapidflow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22}, CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}, GraphFlow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17}等均可应用这一基础框架解决本文的研究问题，但其整体的效率并不高。
+因此，虽然当前主流的连续子图匹配算法，如Rapidflow\cite{csm-rapidflow-DBLP:journals/pvldb/SunSHL22}, CaLiG\cite{csm-calig-DBLP:journals/pacmmod/YangZZY23}, GraphFlow\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17}等均可应用这一基线算法框架解决本文的研究问题，但其整体的效率并不高。
+\begin{algorithm}[h!]
+    \small
+    \caption{\label{alg:baseline:framework}CSM-TopK基线算法框架}
+    \KwIn{动态图$\iG=(G_0, \Delta)$，查询$Q$，参数$k$}
+    \KwOut{各时刻$G_t$的top-k结果$A^k_t$}
+        为$Q$的每条边$(u_1, u_2)$构建匹配序列$\Phi$ \label{code:build-matching-order} \\
+        在$G_0$上计算初始top-k结果集$A_0^k$ \label{code:build-initial-topk}\\
+        \ForEach{$o_t=(op,v_1,v_2)\in \Delta$}{
+            应用$o_t$生成新图$G_t$ \\
+            初始化$A^k_{t} \leftarrow A^k_{t-1}$ \\
+            设$\Phi$为从$u_1,u_2$为起始点的匹配序列\\
+            \If{$op = +$}{ \label{code:base-ins:begin}
+                \ForEach{$(u_1,u_2)\in E_{Q_t}$\ 匹配\ $(v_1, v_2)$} { 
+                    设$g^2=\{v_1,v_2\}$, 并将$v_1$,$v_2$设置为已访问\\ \label{code:match-vertex}
+                    $\mathrm{FindDenseMatches}$($G_t$,$Q$,$\Phi$,$g^2$, $A_t^k$,$k$) \label{code:baseline:end} \\
+                    /*详细见算法\ref{alg:find-dense-matches}*/  \label{code:base-ins:end}
+                }
+            }
+            \If{$op = -$}{   \label{code:base-del:begin} 
+                从当前$A_t^k$中删除所有包含$(v_1, v_2)$的过期匹配 \\
+                \If{$(k^\prime = |A_{t-1}^k| - |A_{t}^k|) > 0$}{
+                    \ForEach{$(v_{i_1},v_{i_2})\in E_{G_{t}}$}{
+                            \ForEach{$(u_1,u_2)\in E_{Q}$\ 匹配\ $(v_{i_1},v_{i_2})$}{
+                                 设$g^2=\{v_{i_1},v_{i_2}\}$并且将$v_{i_1}$, $v_{i_2}$设置为已访问  \\
+                                 $\mathrm{FindDenseMatches}$($G_t$,$Q$,$\Phi$,$g^2$, $A_t^k$, $k$)\\
+                                 将$v_{i_1}$、$v_{1i_2}$设置为未访问\label{code:base-del:end} 
+                            }
+                    }
+                    } 
+                } 
+           } 
+    \Return
+    \end{algorithm}
 
 %他们将子图的密度定义为其边权之和，即边权总和越大，子图的密度优先级越高。
 \subsection{基线方案中的密度剪枝策略}
 \label{ch3:wegiht-prune-baseline}
-为了高效地计算和维持top-k子图匹配结果，我们在\ref{ch3:base-framework}节中提出的基础框架中引入了密度剪枝策略，从而能够根据密度优先级机制更新匹配结果，并有效减少计算开销。
+为了高效地计算和维持top-k子图匹配结果，我们在\ref{ch3:base-framework}节中提出的基线算法框架中引入了密度剪枝策略，从而能够根据密度优先级机制更新匹配结果，并有效减少计算开销。
 密度剪枝策略通过计算每个匹配的密度并按优先级进行排序，能够帮助我们迅速丢弃低密度的匹配，减少不必要的计算。
 这一策略的引入，使得原本复杂的子图匹配过程变得更加高效，特别是在需要处理大量候选匹配时，能够显著提高算法的执行效率。
 
-密度剪枝策略的核心思想是，首先通过递归搜索来计算部分匹配，并利用最坏情况最优连接（WCOJ）\cite{sm-bfs-DBLP:conf/focs/AtseriasGM08}策略扩展匹配集。随着递归的深入，部分匹配会不断扩展为更大的匹配集，并且我们会根据每个匹配的密度对其进行排序，最终保留前$k$个密度最高的匹配结果，所有第$k$以外的匹配结果都将被剪枝。
+密度剪枝策略的核心思想是，首先通过递归搜索来计算部分匹配，并利用WCOJ策略扩展匹配集。随着递归的深入，部分匹配会不断扩展为更大的匹配集，并且我们会根据每个匹配的密度对其进行排序，最终保留前$k$个密度最高的匹配结果，所有第$k$以外的匹配结果都将被剪枝。
 这一方案被称为“密度剪枝策略的基线方案”。在算法\ref{alg:find-dense-matches}中，我们详细讨论了利用递归中使用WCOJ以及密度进行剪枝的具体过程，该过程为整个子图匹配的加速提供了重要的支持。
 
-在递归搜索中，我们应用了最坏情况最优连接（WCOJ）\cite{wcoj-generic-join-DBLP:journals/sigmod/NgoRR13}，通过这一策略有效地扩展了部分匹配的候选集（算法 \ref{alg:find-dense-matches}）。
+在递归搜索中，我们应用了WCOJ，通过这一策略有效地扩展了部分匹配的候选集（算法 \ref{alg:find-dense-matches}）。
 WCOJ是子图匹配领域中一个重要的优化策略，其核心思想是通过交集操作，减少候选匹配集的规模，从而加速整个匹配过程。
 WCOJ在多项CSM研究中得到广泛应用\cite{csm-graphflow-DBLP:conf/sigmod/KankanamgeSMCS17,csm-graphflowpp-DBLP:journals/tods/MhedhbiKS21,csm-survey:DBLP:journals/pvldb/SunSLH22}，并且证明了其在大规模图数据中的有效性。
 
 在阐述递归搜索与 WCOJ 的结合之前，我们首先定义查询顶点的左邻居和右邻居，这一概念对于理解WCOJ策略如何在递归过程中有效工作至关重要：
-\begin{itemize}
-    \item 若 $u_i \in N_Q(u_j)$（即$u_j$和$u_i$之间有边相连） 且 $u_i$ 位于匹配序列 $\Phi$ 中 $u_j$位置的左侧，则称查询顶点 $u_i$ 是 $\Phi$ 中查询顶点$u_j$ 的左邻居。
+
+\textbullet~若 $u_i \in N_Q(u_j)$（即$u_j$和$u_i$之间有边相连） 且 $u_i$ 位于匹配序列 $\Phi$ 中 $u_j$位置的左侧，则称查询顶点 $u_i$ 是 $\Phi$ 中查询顶点$u_j$ 的左邻居。
     对称地, $u_j$ 是 $u_i$ 的右邻居。
-    \item $LN_{\Phi}(u_i)$/$RN_{\Phi}(u_i)$ 表示 $\Phi$ 中 $u_i$ 的左/右邻居集合。若上下文清晰，简化为 $LN(u_i)$/$RN(u_i)$。
-\end{itemize}   
+
+\textbullet~$LN_{\Phi}(u_i)$/$RN_{\Phi}(u_i)$ 表示 $\Phi$ 中 $u_i$ 的左/右邻居集合。若上下文清晰，简化为 $LN(u_i)$/$RN(u_i)$。
 
 例如，在图 \ref{fig:csm-topk}b 中，匹配序列为 $\{u_1, u_2, u_3, u_4\}$，则：$LN(u_3) = \{u_1, u_2\}$，表示$u_3$的左邻居是$u_1$和$u_2$。这一结构对于后续的匹配扩展至关重要，因为它决定了如何从当前部分匹配出发，寻找可能的匹配扩展。
 
@@ -304,13 +366,13 @@ $O(d_{t}^{k})=O(d_{t}^{|V_Q|-2})$。进一步分析，若数据图$G_t$趋近于
 
 
 
-\section{技术挑战与核心思想}
+\section{技术挑战}
 本小节主要探讨了CSM-TopK框架中的技术挑战与核心思想。
 首先，介绍了CSM-TopK框架中存在的低效问题，特别是在插入和删除操作时的计算浪费，并提出了减少不必要计算的需求。
 接着，重点讨论了基于密度的剪枝挑战，提出在处理大规模数据时，如何设计高效的密度上界函数来有效降低计算开销。
 为应对这些挑战，我们提出了核心思想：构建压缩图上的全局MWstar和局部MWstar索引结构，  旨在构建紧密的密度上界函数，有效支持基于密度的剪枝策略，
 并通过压缩图进一步提升了性能。
-\subsection{CSM-TopK 基线框架的效率瓶颈}
+\subsection{CSM-TopK 基线算法框架的效率瓶颈}
 
 在现有的基线方案中，我们直接应用现有的 CSM 搜索策略来计算 CSM-TopK，然而这种方式效率较低。
 具体而言，当 $o_t$ 是一个插入操作时，基线方法需要计算所有新增的匹配，即 $A_{t} \setminus A_{t-1}$，然后从 $A_{t-1}^k \cup (A_{t} \setminus A_{t-1})$ 中检索前 $k$ 个密度最高的匹配，从而构建 $A_t^k$。
@@ -346,25 +408,25 @@ $O(d_{t}^{k})=O(d_{t}^{|V_Q|-2})$。进一步分析，若数据图$G_t$趋近于
     \item \textbf{计算效率}:密度上界函数需保持轻量级，能够在大规模图数据上高效运行。为避免对每个部分匹配进行复杂计算，我们需设计高效的算法以确保密度计算的快速性。
 \end{itemize}   
 
-\subsection{核心思想}
-为解决上述挑战，我们提出了两种索引结构：全局 MWstar 和局部 MWstar。这两种索引结构共同为每个部分匹配 $g^i$ 构建了一个紧凑的密度上界函数。
-基于 MWstar 的密度上界函数在基于密度的剪枝中表现出显著的效果，且该函数仅需线性空间，能够在近乎常数级的时间内更新。
+% \subsection{核心思想}%todo 放到下一章
+% 为解决上述挑战，我们提出了两种索引结构：全局 MWstar 和局部 MWstar。这两种索引结构共同为每个部分匹配 $g^i$ 构建了一个紧凑的密度上界函数。
+% 基于 MWstar 的密度上界函数在基于密度的剪枝中表现出显著的效果，且该函数仅需线性空间，能够在近乎常数级的时间内更新。
 
-此外，我们在每个 $G_t$ 之上维护了压缩图，以进一步提升性能。
-我们首先在 $G_0$ 上构建压缩图 $\mathcal{G}0$，对于在$G_{t-1}$上应用的每次更新操作$o_t$（$t \geq 1$）形成$G_t$,
-在形成更新后的图$G_t$之后，我们将 $\mathcal{G}_{t-1}$ 也相应地转换为 $\mathcal{G}_t$。
-压缩图的构建和更新策略确保了其在后续计算中具有较高的效率。
-在 $\mathcal{G}_t$ 上运行 CSM-TopK，相较于直接在原始图 $G_t$ 上进行计算，具有更高的效率。
-一方面，压缩图上的 MWstar 占用的空间更少，更新时间也更短；
-另一方面，压缩图的使用可以减少对无关数据的访问，进一步提升计算效率。
-因此在压缩图上结合MWstar索引结构的优化策略，不仅能够提高了密度剪枝的效果，而且在处理大规模数据时表现出了出色的扩展性。
+% 此外，我们在每个 $G_t$ 之上维护了压缩图，以进一步提升性能。
+% 我们首先在 $G_0$ 上构建压缩图 $\mathcal{G}0$，对于在$G_{t-1}$上应用的每次更新操作$o_t$（$t \geq 1$）形成$G_t$,
+% 在形成更新后的图$G_t$之后，我们将 $\mathcal{G}_{t-1}$ 也相应地转换为 $\mathcal{G}_t$。
+% 压缩图的构建和更新策略确保了其在后续计算中具有较高的效率。
+% 在 $\mathcal{G}_t$ 上运行 CSM-TopK，相较于直接在原始图 $G_t$ 上进行计算，具有更高的效率。
+% 一方面，压缩图上的 MWstar 占用的空间更少，更新时间也更短；
+% 另一方面，压缩图的使用可以减少对无关数据的访问，进一步提升计算效率。
+% 因此在压缩图上结合MWstar索引结构的优化策略，不仅能够提高了密度剪枝的效果，而且在处理大规模数据时表现出了出色的扩展性。
 \section{本章小结}
-本章系统阐述了基于密度剪枝的连续子图匹配问题（CSM-TopK）的理论基础与基础框架。首先，通过形式化定义动态图、子图匹配、密度度量等核心概念，构建了CSM-TopK问题的数学模型，并基于最大团问题的归约严格证明了该问题的NP难特性。
-其次，提出了一种CSM-TopK的基础框架，其核心贡献如下：
-\begin{itemize}
-\item \textbf{CSM-TopK的基础框架}：构建离线预处理与在线更新相结合的计算框架。离线阶段通过静态子图匹配生成初始top-k结果；在线阶段针对边插入/删除操作，提出了新增匹配扩展与失效匹配补充的策略。
+本章系统阐述了基于密度剪枝的连续子图匹配问题（CSM-TopK）的理论基础与基线算法框架。首先，通过形式化定义动态图、子图匹配、密度度量等核心概念，构建了CSM-TopK问题的数学模型，并基于最大团问题的归约严格证明了该问题的NP难特性。
+其次，提出了一种CSM-TopK的基线框架，包含基线算法框架以及密度剪枝策略，并且分析基线方案在执行效率上的瓶颈以及本课题的技术挑战。
+% \begin{itemize}
+% \item \textbf{CSM-TopK的基线算法框架}：构建离线预处理与在线更新相结合的计算框架。离线阶段通过静态子图匹配生成初始top-k结果；在线阶段针对边插入/删除操作，提出了新增匹配扩展与失效匹配补充的策略。
 
-\item \textbf{引入WOCJ机制与密度机制}：在递归搜索过程中引入最坏情况最优连接策略，通过候选集交集运算优化匹配扩展。同时，提出基于第$k$个子图匹配结果构成的密度上界来进行粗略剪枝，减少无效子图匹配结果的存储。
+% \item \textbf{引入WOCJ机制与密度机制}：在递归搜索过程中引入最坏情况最优连接策略，通过候选集交集运算优化匹配扩展。同时，提出基于第$k$个子图匹配结果构成的密度上界来进行粗略剪枝，减少无效子图匹配结果的存储。
 
-\item \textbf{创新方向提出}：针对上述瓶颈，提出本研究课题的技术挑战与核心思想，指明了提高计算效率的潜在途径。
-\end{itemize}    
+% \item \textbf{创新方向提出}：针对上述瓶颈，提出本研究课题的技术挑战与核心思想，指明了提高计算效率的潜在途径。
+% \end{itemize}    

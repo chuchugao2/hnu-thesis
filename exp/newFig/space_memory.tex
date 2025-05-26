@@ -1,17 +1,17 @@
 \begin{figure*}[h!]
-\def\wscorevone{0.19}
-\centering
-    %=========================================amazon
+    \def\wscorevone{0.27}
+    \centering
+    % First row - three figures
     \begin{subfigure}[t]{\wscorevone\linewidth}
-	    \centering
-	    \resizebox{\linewidth}{!}
-	    {
-	        \includegraphics{\csmfolder space_memory_amazon.pdf}
-	    }
-	    \caption{Amazon}
-	    \label{fig:exp:space:memory:amazon}
+        \centering
+        \resizebox{\linewidth}{!}
+        {
+            \includegraphics{\csmfolder space_memory_amazon.pdf}
+        }
+        \caption{Amazon}
+        \label{fig:exp:space:memory:amazon}
     \end{subfigure}
-    %=========================================livejournal
+    \hspace{3em}
     \begin{subfigure}[t]{\wscorevone\linewidth}
         \centering
         \resizebox{\linewidth}{!}
@@ -21,27 +21,30 @@
         \caption{LiveJournal}
         \label{fig:exp:space:memory:livejournal}
     \end{subfigure}
-     %=========================================human
-     \begin{subfigure}[t]{\wscorevone\linewidth}
-         \centering
-         \resizebox{\linewidth}{!}
-         {
-             \includegraphics{\csmfolder space_memory_human.pdf}
-         }
-         \caption{Human}
-         \label{fig:exp:space:memory:human}
-     \end{subfigure}
-     %=========================================youtube
-     \begin{subfigure}[t]{\wscorevone\linewidth}
-         \centering
-         \resizebox{\linewidth}{!}
-         {
-             \includegraphics{\csmfolder space_memory_youtube.pdf}
-         }
-         \caption{YouTube}
-         \label{fig:exp:space:memory:youtube}
-     \end{subfigure}
-     \begin{subfigure}[t]{\wscorevone\linewidth}
+    \hspace{3em}
+    \begin{subfigure}[t]{\wscorevone\linewidth}
+        \centering
+        \resizebox{\linewidth}{!}
+        {
+            \includegraphics{\csmfolder space_memory_human.pdf}
+        }
+        \caption{Human}
+        \label{fig:exp:space:memory:human}
+    \end{subfigure}
+    
+    % Second row - two figures
+    \vspace{0.5cm}
+    \begin{subfigure}[t]{\wscorevone\linewidth}
+        \centering
+        \resizebox{\linewidth}{!}
+        {
+            \includegraphics{\csmfolder space_memory_youtube.pdf}
+        }
+        \caption{YouTube}
+        \label{fig:exp:space:memory:youtube}
+    \end{subfigure}
+    \hspace{3em}
+    \begin{subfigure}[t]{\wscorevone\linewidth}
         \centering
         \resizebox{\linewidth}{!}
         {
@@ -50,6 +53,6 @@
         \caption{Orkut}
         \label{fig:exp:space:memory:orkut}
     \end{subfigure}
-\caption{空间对比($k=100$)}
-\label{fig:exp:space:memory}
+    \caption{空间对比($k=100$)}
+    \label{fig:exp:space:memory}
 \end{figure*}

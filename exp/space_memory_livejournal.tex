@@ -13,13 +13,15 @@
 
 \begin{document}
 \newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
-\newcommand{\labelfont}{20pt}
+\newcommand{\labelfont}{40pt}
 \begin{tikzpicture}
 \input{./tikz_HEAD}
 \begin{semilogyaxis}
 [
     ymin = 0,
     ymax=20000000,
+    width = 16 cm,
+    height = 14.5 cm,
  %   ymax=0.9,
  %   xmin = 0,
  %   xmax =110
@@ -37,29 +39,29 @@
  %    ytick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
  %    legend pos= north east,
      legend cell align=left,
-     x label style = {font=\ptfont{\labelfont}},
-     ticklabel style = {font=\Large},
-     y label style = {inner sep=0pt,at={(axis description cs:-0.04,0.5)},font=\ptfont{\labelfont}},
+     x label style = {inner sep=0pt,at={(axis description cs:0.5,-0.1)},font=\ptfont{\labelfont}},
+     ticklabel style =  {font=\ptfont{30pt}},
+     y label style = {inner sep=0pt,at={(axis description cs:-0.15,0.5)},font=\ptfont{\labelfont}},
      extra y ticks={20000000},
      extra y tick label={INF},
 ]
 
-\addplot [ourMark]
+\addplot [ourMark,mark size=10pt]
 coordinates {(\gNumone, 6674990.00 ) (\gNumtwo, 6713371.00  )  (\gNumthr,6693753.00 )  (\gNumfor,6712381.00  )  (\gNumfiv,6741858.00  )};
 
-\addplot [graphflowMark]
+\addplot [graphflowMark,mark size=10pt]
 coordinates {(\gNumone, 5970724.00  ) (\gNumtwo, 5970727.00  )  (\gNumthr, 5970713.00  )  (\gNumfor, 5970721.00  )  (\gNumfiv,5970732.00  )};
 
-\addplot [rapidflowMark]
+\addplot [rapidflowMark,mark size=10pt]
 coordinates {(\gNumone, 6965940.00  ) (\gNumtwo,6965940.00  )  (\gNumthr, 6965940.00  )  (\gNumfor, 6965940.00  )  (\gNumfiv, 6965940.00  )};
 
-\addplot [caligMark]
+\addplot [caligMark,mark size=10pt]
 coordinates {(\gNumone, 8160964.64  ) (\gNumtwo, 8449715.41  )  (\gNumthr, 7976066.75  )  (\gNumfor,  8476497.04  )  (\gNumfiv,8556246.80  )};
 
-\addplot [instopkMark]
+\addplot [instopkMark,mark size=10pt]
 coordinates {(\gNumone, 20000000) (\gNumtwo, 20000000 )  (\gNumthr, 20000000 )  (\gNumfor, 20000000 )  (\gNumfiv, 20000000 )};
 
-\addplot [pbsmMark]
+\addplot [pbsmMark,mark size=10pt]
 coordinates{(\gNumone, 9549900.00  ) (\gNumtwo, 9510540.00 )  (\gNumthr, 9510552.00  )  (\gNumfor, 9510541.00 )  (\gNumfiv, 9510549.00  )};
 
 
@@ -71,13 +73,13 @@ coordinates{(\gNumone, 9549900.00  ) (\gNumtwo, 9510540.00 )  (\gNumthr, 9510552
 
 
 % \fixNum
-\begin{customlegend}[legend style={at={(3.45, 4.8) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg,\itk,\pm}]
-    \addlegendimage{ourMark}
-    \addlegendimage{graphflowMark}
-    \addlegendimage{rapidflowMark}
-    \addlegendimage{caligMark}
-	\addlegendimage{instopkMark}
-    \addlegendimage{pbsmMark}
+\begin{customlegend}[legend style={at={(7.45, 10.8) ,font=\ptfont{\labelfont}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg,\itk,\pm}]
+    \addlegendimage{ourMark,mark size=10pt}
+    \addlegendimage{graphflowMark,mark size=10pt}
+    \addlegendimage{rapidflowMark,mark size=10pt}
+    \addlegendimage{caligMark,mark size=10pt}
+	\addlegendimage{instopkMark,mark size=10pt}
+    \addlegendimage{pbsmMark,mark size=10pt}
 	% \addlegendimage{graphflowMark}
 
 \end{customlegend}

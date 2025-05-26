@@ -13,7 +13,7 @@
 
 \begin{document}
 \newcommand{\ptfont}[1]{\fontsize{#1}{\baselineskip}\selectfont}
-\newcommand{\labelfont}{20pt}
+\newcommand{\labelfont}{40pt}
 \begin{tikzpicture}
 \input{./tikz_HEAD}
 \begin{semilogyaxis}
@@ -22,6 +22,8 @@
     ymax=64000000,
     % ytick={10,1000,10000,100000,10000000}, % 手动设置刻度位置
     % yticklabels={$10^1$,$10^3$,$10^4$,$10^5$,$10^7$}, % 刻度标签
+    width = 16 cm,
+    height = 14.5 cm,
     point meta=rawy,
     ymajorgrids = true,
     grid style=dashed,
@@ -32,9 +34,9 @@
     xtick={\gNumone, \gNumtwo, \gNumthr, \gNumfor, \gNumfiv},
 %    legend pos= north east,
     legend cell align=left,
-    x label style = {font=\ptfont{\labelfont}},
-    ticklabel style = {font=\Large},
-    y label style = {inner sep=0pt,at={(axis description cs:-0.02,0.5)},font=\ptfont{\labelfont}},
+    x label style = {inner sep=0pt,at={(axis description cs:0.5,-0.1)},font=\ptfont{\labelfont}},
+    ticklabel style =  {font=\ptfont{\labelfont}},
+    y label style = {inner sep=0pt,at={(axis description cs:-0.15,0.5)},font=\ptfont{\labelfont}},
     % legend style={at={(0.5, 0.40)},font=\ptfont{19pt},draw=none, row sep=-0.6pt,fill=none, anchor = north, inner sep = 0pt},
     % legend cell align=left,
     % legend columns = 2
@@ -43,22 +45,22 @@
     % legend style={at={(0.45, 1.0)}, draw=none, fill=none, anchor = north, legend columns = 3, font=\ptfont{5pt}, row sep=-2pt, inner sep = 0pt}
 ]
 
-\addplot [ourMark]
+\addplot [ourMark,mark size=10pt]
 coordinates {(\gNumone, 10.02482  ) (\gNumtwo, 14.45994  )  (\gNumthr, 16.47198  )  (\gNumfor, 20.71324  )  (\gNumfiv, 25.45536  )};
 
-\addplot [graphflowMark]
+\addplot [graphflowMark,mark size=10pt]
 coordinates {(\gNumone, 1245.31) (\gNumtwo, 9771.8025 )  (\gNumthr, 8356.6263 )  (\gNumfor, 29242.4416 )  (\gNumfiv, 23131.2466)};
 
-\addplot [rapidflowMark]
+\addplot [rapidflowMark,mark size=10pt]
 coordinates {(\gNumone, 8542.7653 ) (\gNumtwo, 10258.5467 )  (\gNumthr, 17695.38706 )  (\gNumfor, 30366.75866 )  (\gNumfiv, 29841.6199 )};
 
-\addplot [caligMark]
+\addplot [caligMark,mark size=10pt]
 coordinates {(\gNumone, 14052.35) (\gNumtwo, 25025.37)  (\gNumthr,24695.13)  (\gNumfor,25341.42)  (\gNumfiv,34353.96)};
 
-\addplot [instopkMark]
+\addplot [instopkMark,mark size=10pt]
 coordinates {(\gNumone, 5629659 ) (\gNumtwo, 7002995 )  (\gNumthr, 8672203 )  (\gNumfor, 7668217 )  (\gNumfiv,7691927 )};
 
-\addplot [pbsmMark]
+\addplot [pbsmMark,mark size=10pt]
 coordinates{(\gNumone,3451579 ) (\gNumtwo, 3449054 )  (\gNumthr, 5438531)  (\gNumfor, 6411281 )  (\gNumfiv, 6444372 )};
 
 % \fixksizelegend
@@ -68,18 +70,18 @@ coordinates{(\gNumone,3451579 ) (\gNumtwo, 3449054 )  (\gNumthr, 5438531)  (\gNu
 % 31238.77117	29799.44212	32041.23502	19532.96765	18696.43799	17069.86616
 %\addplot [vf2Mark]
 %coordinates {(\qszone, 31238)  (\qsztwo, 29799)  (\qszthr, 32041)  (\qszfor, 19532)  (\qszfiv, 18696)  (\qszsix, 17069) };
-\begin{customlegend}[legend style={at={(3.55, 2.12) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg}]
-    \addlegendimage{ourMark}
-    \addlegendimage{graphflowMark}
-    \addlegendimage{rapidflowMark}
-    \addlegendimage{caligMark}
+\begin{customlegend}[legend style={at={(7.8, 5.12) ,font=\ptfont{\labelfont}}, draw=none, row sep=-0.6pt, fill=none, anchor = north,inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\ctk,\gf,\rf,\cg}]
+    \addlegendimage{ourMark,mark size=10pt}
+    \addlegendimage{graphflowMark,mark size=10pt}
+    \addlegendimage{rapidflowMark,mark size=10pt}
+    \addlegendimage{caligMark,mark size=10pt}
 	% \addlegendimage{graphflowMark}
 
 \end{customlegend}
 
-\begin{customlegend}[legend style={at={(2.55, 4.2) ,font=\ptfont{19pt}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\itk,\pm}]
-    \addlegendimage{instopkMark}
-    \addlegendimage{pbsmMark}
+\begin{customlegend}[legend style={at={(5.4, 9.2) ,font=\ptfont{\labelfont}}, draw=none, row sep=-0.6pt, fill=none, anchor = north, inner sep = 0pt},legend columns = 2,legend cell align=left,legend entries={\itk,\pm}]
+    \addlegendimage{instopkMark,mark size=10pt}
+    \addlegendimage{pbsmMark,mark size=10pt}
 \end{customlegend}
 
 
